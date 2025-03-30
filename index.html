@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Diagramma Ganttius</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="./gantt.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            .line {
+                stroke: black;
+                stroke-width: 1px;
+                stroke-dasharray: 4; /* Opcional: linha tracejada */
+                opacity: 50%;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 font-sans antialiased" style="font-size: 1rem">
+        <!-- Header -->
+        <header class="bg-indigo-600 text-white p-4 flex justify-between items-center">
+            <div class="flex space-x-4 btn-container">
+                <button id="downloadBtn" class="p-2 rounded-xs shadow-md text-white disabled:opacity-50" disabled><i class="fas fa-download"></i></button>
+                <label class="p-2 rounded-xs shadow-md text-white cursor-pointer"><i class="fas fa-upload"></i><input type="file" id="uploadInput" class="hidden" accept=".json"></label>
+                <button id="sidebarBtn" class="p-2 rounded-xs shadow-md text-white" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                <!-- <button id="syncBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-cloud-upload-alt"></i></button> -->
+                <button id="saveBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-save"></i></button>
+                <button id="shareBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-share-alt"></i></button>
+            </div>
+            <div class="flex items-center space-x-2">
+                <h1 class="text-2xl" contenteditable="false" onblur="updateProjectName(this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true"></h1>
+                <button id="newProjectBtn" class="p-2 rounded-xs shadow-md text-white" onclick="newProject()"><i class="fas fa-file"></i></button>
+            </div>
+            <div class="flex space-x-4">
+                <button id="usersBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-users"></i></button>
+                <button id="layoutBtn" class="p-2 rounded-xs shadow-md text-white" onclick="toggleLayout()"><i class="fas fa-columns"></i></button>
+                <div class="relative">
+                    <button id="languageBtn" class="p-2 rounded-xs shadow-md text-white">🇧🇷</button>
+                    <div id="languageMenu" class="hidden absolute right-0 mt-2 bg-white text-gray-800 rounded shadow-lg text-xs w-[50px]" style="z-index: 1;">
+                        <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="pt-BR">BR</button>
+                        <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="en">ENG</button>
+                        <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="es">ES</button>
+                    </div>
+                </div>
+                <button id="fontIncrease" class="hidden p-2 rounded-xs shadow-md text-white"><i class="fas fa-plus"></i></button>
+                <button id="fontDecrease" class="hidden p-2 rounded-xs shadow-md text-white"><i class="fas fa-minus"></i></button>
+            </div>
+        </header>
+
+        <!-- Modal de Usuários -->
+        <dialog id="usersModal" class="p-6 rounded-lg shadow-lg bg-white w-1/2">
+            <h2 class="text-xl mb-4"></h2>
+            <table class="w-full text-xs text-gray-800">
+                <thead class="bg-blue-100 text-blue-900">
+                    <tr class="h-7">
+                        <th class="p-2 text-center"></th>
+                        <th class="p-2 text-left"></th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+            </table>
+            <button class="mt-4 bg-red-500 bg-opacity-50 text-white px-4 py-2 rounded" onclick="document.getElementById('usersModal').close()"></button>
+        </dialog>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg sidebar-transition transform -translate-x-full transition-transform duration-300 ease-in-out z-50">
+            <div class="p-4">
+                <h2 class="text-xl font-semibold text-gray-800" id="sidebarTitle">Projetos</h2>
+                <ul id="projectList" class="mt-4"></ul>
+            </div>
+        </div>
+
+        <div class="flex h-full p-2 m-2">
+            <!-- Grid à esquerda -->
+            <div class="my-6 w-1/2 pt-6 px-2 mt-3 bg-white shadow-md rounded-l-lg " id="gridTask">
+                <div class="overflow-x-auto" id="gridScroll">
+                    <table class="w-full text-sm text-gray-800">
+                        <thead class="bg-blue-100 text-blue-900">
+                            <tr class="h-7"></tr>
+                        </thead>
+                        <tbody id="mainTableBody" ></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gráfico de Gantt à direita -->
+            <div class="my-6 w-1/2 mt-3 pb-6 px-2 bg-white shadow-md border-l border-gray-50" id="graphGantt">
+                <div class="overflow-x-auto relative" id="ganttScroll">
+                    <svg id="svgCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10;">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <polygon points="0,0 10,5 0,10" fill="black" />
+                            </marker>
+                        </defs>
+                    </svg>
+                    <div class="min-w-max">
+                        <div class="flex border-b border-gray-300 gantt-weeks bg-white"></div>
+                        <div class="flex gantt-days"></div>
+                        <div class="mt-3 gantt-tasks"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
