@@ -589,6 +589,21 @@ window.addEventListener('load', function () {
     saveMessage.textContent = translations[currentLang].saving || "Salvando...";
     header.appendChild(saveMessage);
 
+    if (projectData.project.id == 1) {
+      try {
+        const response = await fetch(`${url_base}/uuid`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Falha ao obter UUID');
+        const data = await response.json();
+        projectData.project.id = data.uuid; // Atualiza o ID do projeto com o UUID retornado
+      } catch (error) {
+        console.error('Erro ao criar novo projeto:', error);
+        alert(translations[currentLang].uuidError);
+      }
+    }
+
     try {
       const response = await fetch(`${url_base}/${projectData.project.id}`, {
         method: 'POST',
