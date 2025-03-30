@@ -915,7 +915,7 @@ function isTaskVisible(tid) {
 async function newProject() {
   var id = Date.now();
   try {
-    const response = await fetch(`${url_base}`, {
+    const response = await fetch(`${url_base}/${uuid}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -986,8 +986,17 @@ async function newProject() {
   }
 }
 
-function saveToLocalStorage() {
+async function saveToLocalStorage() {
   const dat = { project: { ...projectData.project } };
+  if (dat.project.id == 1) {
+    const response = await fetch(`${url_base}/${uuid}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) throw new Error('Falha ao obter UUID');
+    const data = await response.json();
+    dat.project.id = data.uuid;
+  }
   delete dat.project.columnNames;
   const str = JSON.stringify(dat);
   const siz = new Blob([str]).size;
