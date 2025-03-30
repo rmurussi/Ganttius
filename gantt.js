@@ -608,7 +608,7 @@ window.addEventListener('load', function () {
       const response = await fetch(`${url_base}/${projectData.project.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(projectData)
+        body: JSON.stringify(projectData.project)
       });
 
       if (!response.ok) throw new Error('Falha ao salvar');
