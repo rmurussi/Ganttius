@@ -480,7 +480,7 @@ window.addEventListener('load', function () {
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert(translations[currentLang].shareSuccess || "Link copiado para a área de transferência!");
     }).catch(err => {
-      console.error('Erro ao copiar URL:', err);
+      // console.error('Erro ao copiar URL:', err);
       alert(translations[currentLang].shareError || "Erro ao copiar o link.");
     });
   });
@@ -509,12 +509,12 @@ window.addEventListener('load', function () {
                   headers: { 'Content-Type': 'application/json'},
                   // mode: 'no-cors', // Desativa CORS
               });
-              console.warn("response", response)
+              // console.warn("response", response)
               if (!response.ok) throw new Error('Falha ao obter UUID');
               uuid = await response.text();
               projectData.project.id = uuid;
           } catch (error) {
-              console.error('Erro ao obter UUID:', error);
+              // console.error('Erro ao obter UUID:', error);
               alert(translations[currentLang].uuidError);
               return;
           }
@@ -544,7 +544,7 @@ window.addEventListener('load', function () {
           // Atualiza o localStorage com o novo UUID se aplicável
           saveToLocalStorage();
       } catch (error) {
-          console.error('Erro ao sincronizar:', error);
+          // console.error('Erro ao sincronizar:', error);
           header.classList.remove('blur-sm');
           syncMessage.textContent = translations[currentLang].syncError;
           setTimeout(() => syncMessage.remove(), 2000);
@@ -599,7 +599,7 @@ window.addEventListener('load', function () {
         const data = await response.json();
         projectData.project.id = data.uuid; // Atualiza o ID do projeto com o UUID retornado
       } catch (error) {
-        console.error('Erro ao criar novo projeto:', error);
+        // console.error('Erro ao criar novo projeto:', error);
         alert(translations[currentLang].uuidError);
       }
     }
@@ -608,7 +608,16 @@ window.addEventListener('load', function () {
       const response = await fetch(`${url_base}/${projectData.project.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(projectData.project)
+        body: JSON.stringify({
+          id: projectData.project.id
+          name: projectData.project.name
+          tasks: projectData.project.tasks
+          resources: projectData.project.resources
+          columnVisibility: projectData.project.columnVisibility
+          columnOrder: projectData.project.columnOrder
+          columnNames: projectData.project.columnNames
+          statusColors: projectData.project.statusColors
+        })
       });
 
       if (!response.ok) throw new Error('Falha ao salvar');
@@ -624,7 +633,7 @@ window.addEventListener('load', function () {
 
       saveToLocalStorage();
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      // console.error('Erro ao salvar:', error);
       header.classList.remove('blur-sm');
       saveMessage.textContent = translations[currentLang].saveError || "Erro ao salvar.";
       setTimeout(() => saveMessage.remove(), 2000);
@@ -696,14 +705,32 @@ async function loadProjectFromServer() {
     });
     if (!response.ok) throw new Error('Falha ao carregar projeto');
     const project = await response.json();
-    projectData = project; // Substitui os dados locais pelo projeto carregado
+    if (project.tasks.length == 0) {
+      project.tasks.push(
+        {
+         "id": 1,
+         "name": "Planejamento Inicial",
+         "duration": 98,
+         "status": "inProgress",
+         "resource": "João",
+         "parentId": null,
+         "predecessors": "-",
+         "start": "2025-03-26",
+         "end": "2025-05-04",
+         "percentComplete": 9,
+         "level": 0,
+         "expanded": true
+       },
+      );
+    }
+    projectData = {project: project}; // Substitui os dados locais pelo projeto carregado
     saveToLocalStorage(); // Salva no localStorage
     // Aqui você pode adicionar código para atualizar a UI com os dados carregados
-    console.log('Projeto carregado:', projectData);
+    // console.log('Projeto carregado:', projectData);
     GridManager.renderFullGrid()
     buildGantt();
   } catch (error) {
-    console.error('Erro ao carregar projeto:', error);
+    // console.error('Erro ao carregar projeto:', error);
     alert(translations[currentLang].loadError || "Erro ao carregar o projeto.");
   }
 }
@@ -940,7 +967,7 @@ async function newProject() {
     saveToLocalStorage(); // Salva no localStorage
     // Outras inicializações do projeto, se houver
   } catch (error) {
-    console.error('Erro ao criar novo projeto:', error);
+    // console.error('Erro ao criar novo projeto:', error);
     alert(translations[currentLang].uuidError);
   }
 
@@ -1021,7 +1048,7 @@ async function saveToLocalStorage() {
     const key = `project_${projectData.project.id}`;
     localStorage.setItem(key, str);
   } else {
-    console.warn('Tamanho do projeto excede 5MB, não salvo no localStorage.');
+    // console.warn('Tamanho do projeto excede 5MB, não salvo no localStorage.');
   }
 }
 
@@ -1278,7 +1305,7 @@ function showStatusSelect(idx, elm) {
     init() {
       this.tableBody = d.i('mainTableBody');
       if (!this.tableBody) {
-        console.error("Erro: Elemento #mainTableBody não encontrado no DOM. Verifique se o HTML contém esse ID.");
+        // console.error("Erro: Elemento #mainTableBody não encontrado no DOM. Verifique se o HTML contém esse ID.");
         return;
       }
       d.s('h1').textContent = projectData.project.name || "Projeto sem nome";
@@ -1289,7 +1316,7 @@ function showStatusSelect(idx, elm) {
 // Renderiza toda a grade do zero
     renderFullGrid() {
       if (!this.tableBody) {
-        console.error("Erro: tableBody não inicializado. Chame GridManager.init() primeiro.");
+        // console.error("Erro: tableBody não inicializado. Chame GridManager.init() primeiro.");
         return;
       }
       this.tableBody.innerHTML = '';
@@ -1549,10 +1576,6 @@ function showStatusSelect(idx, elm) {
         found = true;
       }
     });
-
-    if (!found) {
-    // console.log(`Nenhuma seta encontrada para fromIdx: ${fromIdx}, toIdx: ${toIdx}`);
-    }
   }
 
   function unhighlightPredecessorRows(idx) {
