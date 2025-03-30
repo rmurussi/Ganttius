@@ -915,7 +915,7 @@ function isTaskVisible(tid) {
 async function newProject() {
   var id = Date.now();
   try {
-    const response = await fetch(`${url_base}/${uuid}`, {
+    const response = await fetch(`${url_base}/uuid`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -989,7 +989,7 @@ async function newProject() {
 async function saveToLocalStorage() {
   const dat = { project: { ...projectData.project } };
   if (dat.project.id == 1) {
-    const response = await fetch(`${url_base}/${uuid}`, {
+    const response = await fetch(`${url_base}/uuid`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
