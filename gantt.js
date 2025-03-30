@@ -351,6 +351,7 @@ const _action = {
 };
 
 window.addEventListener('load', function () {
+  loadProjectFromServer();
   projectData.project.timeline = generateTimeline(projectData.project.tasks);
   projectData.project.filters = {
     status: new Set(projectData.project.tasks.map(t => t.status)),
@@ -475,7 +476,7 @@ window.addEventListener('load', function () {
 
   d.i('shareBtn').addEventListener('click', () => {
     const currentUrl = window.location.href.split('?')[0].split('#')[0]; // Remove query e hash
-    const shareUrl = `${currentUrl}/${projectData.project.id}`;
+    const shareUrl = `${currentUrl}?id=${projectData.project.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert(translations[currentLang].shareSuccess || "Link copiado para a área de transferência!");
     }).catch(err => {
@@ -666,19 +667,15 @@ window.addEventListener('load', function () {
     resource: new Set(projectData.project.tasks.map(t => t.resource)),
     predecessors: new Set(projectData.project.tasks.map(t => t.predecessors))
   };
-
-  const pathParts = window.location.pathname.split('/').filter(Boolean);
-  const possibleUuid = pathParts[pathParts.length - 1];
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-  if (uuidRegex.test(possibleUuid)) {
-    loadProjectFromServer(possibleUuid);
-  }
 });
 
-async function loadProjectFromServer(uuid) {
+async function loadProjectFromServer() {
+  const uuidParamProject = getParameterByName(id);
+  if (!uuidParamProject) {
+    return;
+  }
   try {
-    const response = await fetch(`${url_base}/${uuid}`, {
+    const response = await fetch(`${url_base}/${uuidParamProject}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -688,6 +685,8 @@ async function loadProjectFromServer(uuid) {
     saveToLocalStorage(); // Salva no localStorage
     // Aqui você pode adicionar código para atualizar a UI com os dados carregados
     console.log('Projeto carregado:', projectData);
+    GridManager.renderFullGrid()
+    buildGantt();
   } catch (error) {
     console.error('Erro ao carregar projeto:', error);
     alert(translations[currentLang].loadError || "Erro ao carregar o projeto.");
@@ -916,7 +915,7 @@ function isTaskVisible(tid) {
 async function newProject() {
   var id = Date.now();
   try {
-    const response = await fetch(`${url_base}/uuid`, {
+    const response = await fetch(`${url_base}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -2699,4 +2698,14 @@ function registerMissingResources() {
       existingResources.add(tsk.resource);
     }
   });
+}
+
+function getParameterByName(name) {
+    const url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+          results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
