@@ -609,14 +609,14 @@ window.addEventListener('load', function () {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: projectData.project.id
-          name: projectData.project.name
-          tasks: projectData.project.tasks
-          resources: projectData.project.resources
-          columnVisibility: projectData.project.columnVisibility
-          columnOrder: projectData.project.columnOrder
-          columnNames: projectData.project.columnNames
-          statusColors: projectData.project.statusColors
+          id: projectData.project.id,
+          name: projectData.project.name,
+          tasks: projectData.project.tasks,
+          resources: projectData.project.resources,
+          columnVisibility: projectData.project.columnVisibility,
+          columnOrder: projectData.project.columnOrder,
+          columnNames: projectData.project.columnNames,
+          statusColors: projectData.project.statusColors,
         })
       });
 
