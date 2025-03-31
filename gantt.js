@@ -119,9 +119,9 @@ let projectData = {
      }
    ],
    "resources": [
-     {"id": 1, "name": "Recurso 1", "level": "Junior"},
-     {"id": 2, "name": "Recurso 2", "level": "Pleno"},
-     {"id": 3, "name": "Recurso 3", "level": "Senior"}
+     {"id": 1, "name": "Recurso 1", "level": "Jr"},
+     {"id": 2, "name": "Recurso 2", "level": "Pl"},
+     {"id": 3, "name": "Recurso 3", "level": "Sr"}
    ],
    "columnVisibility": {
      "actions": true,
@@ -343,11 +343,8 @@ let colorMenuTimeout;
 let hideTimeout;
 let fontSize = 1;
 
-const _url_ = "https://the-gantt.onrender.com/";
 const _action = {
   "uuid": "uuid",
-  "save": "save",
-  "project": "project/",
 };
 
 window.addEventListener('load', function () {
@@ -387,9 +384,9 @@ window.addEventListener('load', function () {
           if (!projectData.project.tasks) projectData.project.tasks = [];
           if (!projectData.project.resources) {
             projectData.project.resources = [
-              {"id": 1, "name": "Recurso 1", "level": "Junior"},
-              {"id": 2, "name": "Recurso 2", "level": "Pleno"},
-              {"id": 3, "name": "Recurso 3", "level": "Senior"}
+              {"id": 1, "name": "Recurso 1", "level": "Jr"},
+              {"id": 2, "name": "Recurso 2", "level": "Pl"},
+              {"id": 3, "name": "Recurso 3", "level": "Sr"}
             ];
           }
           if (!projectData.project.columnVisibility) {
@@ -474,8 +471,39 @@ window.addEventListener('load', function () {
     }
   });
 
-  d.i('shareBtn').addEventListener('click', () => {
-    const currentUrl = window.location.href.split('?')[0].split('#')[0]; // Remove query e hash
+  d.i('shareBtn').addEventListener('click', async () => {
+    if (projectData.project.id == 1) {
+      try {
+        const response = await fetch(`${url_base}/${_action.uuid}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Falha ao obter UUID');
+        const data = await response.json();
+        projectData.project.id = data.uuid; // Atualiza o ID do projeto com o UUID retornado
+      } catch (error) {
+        // console.error('Erro ao criar novo projeto:', error);
+        alert(translations[currentLang].uuidError);
+      }
+    }
+
+    const response = await fetch(`${url_base}/${projectData.project.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: projectData.project.id,
+        name: projectData.project.name,
+        tasks: projectData.project.tasks,
+        resources: projectData.project.resources,
+        columnVisibility: projectData.project.columnVisibility,
+        columnOrder: projectData.project.columnOrder,
+        columnNames: projectData.project.columnNames,
+        statusColors: projectData.project.statusColors,
+      })
+    });
+
+    if (!response.ok) throw new Error('Falha ao salvar');
+
     const shareUrl = `${currentUrl}?id=${projectData.project.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert(translations[currentLang].shareSuccess || "Link copiado para a área de transferência!");
@@ -484,72 +512,6 @@ window.addEventListener('load', function () {
       alert(translations[currentLang].shareError || "Erro ao copiar o link.");
     });
   });
-
-  /*
-  d.i('syncBtn').addEventListener('click', async () => {
-
-      const header = d.s('header');
-      header.classList.add('blur-sm', 'relative');
-      const syncMessage = d.c('div');
-      syncMessage.className = 'absolute inset-0 flex items-center justify-center text-white text-lg';
-      syncMessage.textContent = translations[currentLang].syncingWithServer;
-      header.appendChild(syncMessage);
-
-      let uuid = projectData.project.id;
-
-      // 1. Verifica se o ID é numérico ou UUID
-      const isNumeric = /^\d+$/.test(uuid);
-
-      // 2. Se for numérico, requisita um UUID
-      if (isNumeric) {
-          try {
-
-              const response = await fetch(_url_ + _action.uuid, {
-                  method: 'GET',
-                  headers: { 'Content-Type': 'application/json'},
-                  // mode: 'no-cors', // Desativa CORS
-              });
-              // console.warn("response", response)
-              if (!response.ok) throw new Error('Falha ao obter UUID');
-              uuid = await response.text();
-              projectData.project.id = uuid;
-          } catch (error) {
-              // console.error('Erro ao obter UUID:', error);
-              alert(translations[currentLang].uuidError);
-              return;
-          }
-      }
-
-      try {
-          const response = await fetch(_url_ + _action.save, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json'},
-              mode: 'no-cors', // Desativa CORS
-              body: JSON.stringify(projectData)
-          });
-
-          if (!response.ok) throw new Error('Falha ao salvar na nuvem');
-
-          // 5. Remove o efeito quando concluído
-          header.classList.remove('blur-sm');
-          syncMessage.remove();
-
-          // Feedback de sucesso
-          const successMessage = d.c('div');
-          successMessage.className = 'absolute inset-0 flex items-center justify-center text-green-300 text-lg';
-          successMessage.textContent = translations[currentLang].syncSuccess;
-          header.appendChild(successMessage);
-          setTimeout(() => successMessage.remove(), 2000);
-
-          // Atualiza o localStorage com o novo UUID se aplicável
-          saveToLocalStorage();
-      } catch (error) {
-          // console.error('Erro ao sincronizar:', error);
-          header.classList.remove('blur-sm');
-          syncMessage.textContent = translations[currentLang].syncError;
-          setTimeout(() => syncMessage.remove(), 2000);
-      }
-  });*/
 
   d.i('usersBtn').addEventListener('click', () => {
     buildUsersModal();
@@ -591,7 +553,7 @@ window.addEventListener('load', function () {
 
     if (projectData.project.id == 1) {
       try {
-        const response = await fetch(`${url_base}/uuid`, {
+        const response = await fetch(`${url_base}/${_action.uuid}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -963,7 +925,7 @@ function isTaskVisible(tid) {
 async function newProject() {
   var id = Date.now();
   try {
-    const response = await fetch(`${url_base}/uuid`, {
+    const response = await fetch(`${url_base}/${_action.uuid}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -979,15 +941,31 @@ async function newProject() {
 
   if (confirm(translations[currentLang].confirmNewProject)) {
 
+    const now = new Date();
+    std = new Date(now);
+    end = new Date(now);
     projectData = {
       "project": {
         "id": id,
         "name": translations[currentLang].newProject,
-        "tasks": [],
+        "tasks": [{
+          "id": 1,
+          "name": "Planejamento Inicial",
+          "duration": 1,
+          "status": "inProgress",
+          "resource": "",
+          "parentId": null,
+          "predecessors": "-",
+          "start": std,
+          "end": end,
+          "percentComplete": 9,
+          "level": 0,
+          "expanded": true
+        }],
         "resources": [
-          {"id": 1, "name": "Recurso 1", "level": "Junior"},
-          {"id": 2, "name": "Recurso 2", "level": "Pleno"},
-          {"id": 3, "name": "Recurso 3", "level": "Senior"}
+          {"id": 1, "name": "Recurso 1", "level": "Jr"},
+          {"id": 2, "name": "Recurso 2", "level": "Pl"},
+          {"id": 3, "name": "Recurso 3", "level": "Sr"}
         ],
         "columnVisibility": {
           "actions": true,
@@ -1037,7 +1015,7 @@ async function newProject() {
 async function saveToLocalStorage() {
   const dat = { project: { ...projectData.project } };
   if (dat.project.id == 1) {
-    const response = await fetch(`${url_base}/uuid`, {
+    const response = await fetch(`${url_base}/${_action.uuid}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -2111,9 +2089,9 @@ function getResourceIcon(nam) {
   const res = projectData.project.resources.find(r => r.name === nam);
   if (!res) return 'fas fa-user';
   switch (res.level) {
-  case 'Junior': return 'fas fa-user-graduate';
-  case 'Pleno': return 'fas fa-user-tie';
-  case 'Senior': return 'fas fa-user-astronaut';
+  case 'Jr': return 'fas fa-user-graduate';
+  case 'Pl': return 'fas fa-user-tie';
+  case 'Sr': return 'fas fa-user-astronaut';
   default: return 'fas fa-user';
   }
 }
@@ -2147,7 +2125,7 @@ function registerMissingResources() {
       projectData.project.resources.push({
         id: maxId,
         name: tsk.resource,
-        level: "Junior"
+        level: "Jr"
       });
       existingResources.add(tsk.resource);
     }
@@ -2168,9 +2146,9 @@ function buildUsersModal() {
           <td class="p-1 text-center relative">
               <button class="levelBtn p-1" data-index="${idx}"><i class="${getResourceIcon(res.name)}"></i></button>
               <div class="levelMenu hidden absolute z-10 bg-white text-gray-800 rounded shadow-lg">
-                  <button class="block px-4 py-2 hover:bg-gray-100" data-level="Junior"><i class="fas fa-user-graduate"></i> Junior</button>
-                  <button class="block px-4 py-2 hover:bg-gray-100" data-level="Pleno"><i class="fas fa-user-tie"></i> Pleno</button>
-                  <button class="block px-4 py-2 hover:bg-gray-100" data-level="Senior"><i class="fas fa-user-astronaut"></i> Senior</button>
+                  <button class="block px-4 py-2 hover:bg-gray-100" data-level="Jr"><i class="fas fa-user-graduate"></i> Jr</button>
+                  <button class="block px-4 py-2 hover:bg-gray-100" data-level="Pl"><i class="fas fa-user-tie"></i> Pl</button>
+                  <button class="block px-4 py-2 hover:bg-gray-100" data-level="Sr"><i class="fas fa-user-astronaut"></i> Sr</button>
               </div>
           </td>
           <td class="p-1 text-xs truncate max-w-[200px]" title="${res.name}" 
@@ -2184,11 +2162,11 @@ function buildUsersModal() {
   const edr = d.c('tr');
   edr.innerHTML = `
       <td class="p-1 text-center relative">
-          <button class="levelBtn p-1" data-level="Junior"><i class="fas fa-user-graduate"></i></button>
+          <button class="levelBtn p-1" data-level="Jr"><i class="fas fa-user-graduate"></i></button>
           <div class="levelMenu hidden absolute z-10 bg-white text-gray-800 rounded shadow-lg">
-              <button class="block px-4 py-2 hover:bg-gray-100" data-level="Junior"><i class="fas fa-user-graduate"></i> Junior</button>
-              <button class="block px-4 py-2 hover:bg-gray-100" data-level="Pleno"><i class="fas fa-user-tie"></i> Pleno</button>
-              <button class="block px-4 py-2 hover:bg-gray-100" data-level="Senior"><i class="fas fa-user-astronaut"></i> Senior</button>
+              <button class="block px-4 py-2 hover:bg-gray-100" data-level="Jr"><i class="fas fa-user-graduate"></i> Jr</button>
+              <button class="block px-4 py-2 hover:bg-gray-100" data-level="Pl"><i class="fas fa-user-tie"></i> Pl</button>
+              <button class="block px-4 py-2 hover:bg-gray-100" data-level="Sr"><i class="fas fa-user-astronaut"></i> Sr</button>
           </div>
       </td>
       <td class="p-1"><input class="w-full text-xs" placeholder="${translations[currentLang].resources}" onblur="saveNewResource(this)"></td>
@@ -2246,7 +2224,7 @@ function saveNewResource(inp) {
 
   const val = inp.value.trim();
   const btn = inp.closest('tr').qs('.levelBtn');
-  const lvl = btn ? btn.dataset.level : 'Junior';
+  const lvl = btn ? btn.dataset.level : 'Jr';
 
   if (val) {
     const res = {
@@ -2746,7 +2724,7 @@ function registerMissingResources() {
       projectData.project.resources.push({
         id: maxId,
         name: tsk.resource,
-        level: "Junior"
+        level: "Jr"
       });
       existingResources.add(tsk.resource);
     }
