@@ -729,6 +729,7 @@ async function loadProjectFromServer() {
       resource: new Set(projectData.project.tasks.map(t => t.resource)),
       predecessors: new Set(projectData.project.tasks.map(t => t.predecessors))
     };
+    projectData.project.timeline = generateTimeline(projectData.project.tasks);
     saveToLocalStorage(); // Salva no localStorage
     // Aqui você pode adicionar código para atualizar a UI com os dados carregados
     // console.log('Projeto carregado:', projectData);
