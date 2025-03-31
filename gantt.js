@@ -504,6 +504,7 @@ window.addEventListener('load', function () {
 
     if (!response.ok) throw new Error('Falha ao salvar');
 
+    const currentUrl = window.location.href.split('?')[0].split('#')[0];
     const shareUrl = `${currentUrl}?id=${projectData.project.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert(translations[currentLang].shareSuccess || "Link copiado para a área de transferência!");
