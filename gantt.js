@@ -724,6 +724,11 @@ async function loadProjectFromServer() {
       );
     }
     projectData = {project: project}; // Substitui os dados locais pelo projeto carregado
+    projectData.project.filters = {
+      status: new Set(projectData.project.tasks.map(t => t.status)),
+      resource: new Set(projectData.project.tasks.map(t => t.resource)),
+      predecessors: new Set(projectData.project.tasks.map(t => t.predecessors))
+    };
     saveToLocalStorage(); // Salva no localStorage
     // Aqui você pode adicionar código para atualizar a UI com os dados carregados
     // console.log('Projeto carregado:', projectData);
