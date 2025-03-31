@@ -694,7 +694,7 @@ window.addEventListener('load', function () {
 });
 
 async function loadProjectFromServer() {
-  const uuidParamProject = getParameterByName(id);
+  const uuidParamProject = getParameterByName("id");
   if (!uuidParamProject) {
     return;
   }
