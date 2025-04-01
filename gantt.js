@@ -610,8 +610,6 @@ window.addEventListener('load', function () {
   }
 
 
-  // Container para as notificações
-  const notificationContainer = document.getElementById('notification-container');
 });
 
 async function loadProjectFromServer() {
@@ -2809,6 +2807,8 @@ function createNotification(message, type) {
         <span>${message}</span>
     `;
 
+    // Container para as notificações
+    const notificationContainer = document.getElementById('notification-container');
     // Adicionar ao container como primeiro elemento
     notificationContainer.insertBefore(tooltip, notificationContainer.firstChild);
 
