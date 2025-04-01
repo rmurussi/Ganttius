@@ -231,7 +231,10 @@ const translations = {
    "loadError": "Erro ao carregar o projeto.",
    "saving": "Salvando...",
    "saveSuccess": "Salvo com sucesso!",
-   "saveError": "Erro ao salvar."
+   "saveError": "Erro ao salvar.",
+   "processing": "Processando...",
+   "observe": "Observar",
+   "notification": "Link para visualizar o projeto copiado",
  },
  "en": {
    "resources": "Resources",
@@ -275,7 +278,10 @@ const translations = {
    "loadError": "Error loading the project.",
    "saving": "Saving...",
    "saveSuccess": "Saved successfully!",
-   "saveError": "Error saving."
+   "saveError": "Error saving.",
+   "processing": "Processing...",
+   "observe": "View",
+   "notification": "Link to view the project copied",
  },
  "es": {
    "resources": "Recursos",
@@ -319,9 +325,17 @@ const translations = {
    "loadError": "Error al cargar el proyecto.",
    "saving": "Guardando...",
    "saveSuccess": "¡Guardado con éxito!",
-   "saveError": "Error al guardar."
+   "saveError": "Error al guardar.",
+   "processing": "Proceso...",
+   "observe": "Observar",
+   "notification": "Enlace para visualizar el proyecto copiado",
  }
 };
+
+function getTranslation(key, lang = 'pt-BR') {
+  lang = currentLang || lang;
+  return translations[lang][key] || translations['pt-BR'][key]; // Fallback para pt-BR
+}
 
 const d = {
   i: (id) => document.getElementById(id),
@@ -334,7 +348,6 @@ const d = {
 };
 
 let currentLang = navigator.language || "pt-BR";
-
 let draggedTaskIdx = null; // Índice da tarefa sendo arrastada
 let draggedTaskIndex = null;
 let draggedColumn = null;
@@ -359,6 +372,9 @@ window.addEventListener('load', function () {
   GridManager.init();
 
 
+  d.i('downloadBtnMobile').addEventListener('click', () => {
+    d.i('downloadBtn').click();
+  });
   d.i('downloadBtn').addEventListener('click', () => {
     const dat = { project: { ...projectData.project } };
     delete dat.project.columnNames;
@@ -463,7 +479,7 @@ window.addEventListener('load', function () {
           currentLang = old;
           updateLanguage(currentLang);
         } catch (err) {
-          alert(translations[currentLang].errorJson + err.message);
+          showErrorTooltip(translations[currentLang].errorJson + err.message)
         }
       };
       rdr.readAsText(fle);
@@ -471,49 +487,24 @@ window.addEventListener('load', function () {
     }
   });
 
-  d.i('shareBtn').addEventListener('click', async () => {
-    if (projectData.project.id == 1) {
-      try {
-        const response = await fetch(`${url_base}/${_action.uuid}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error('Falha ao obter UUID');
-        const data = await response.json();
-        projectData.project.id = data.uuid; // Atualiza o ID do projeto com o UUID retornado
-      } catch (error) {
-        // console.error('Erro ao criar novo projeto:', error);
-        alert(translations[currentLang].uuidError);
-      }
-    }
-
-    const response = await fetch(`${url_base}/${projectData.project.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: projectData.project.id,
-        name: projectData.project.name,
-        tasks: projectData.project.tasks,
-        resources: projectData.project.resources,
-        columnVisibility: projectData.project.columnVisibility,
-        columnOrder: projectData.project.columnOrder,
-        columnNames: projectData.project.columnNames,
-        statusColors: projectData.project.statusColors,
-      })
-    });
-
-    if (!response.ok) throw new Error('Falha ao salvar');
-
-    const currentUrl = window.location.href.split('?')[0].split('#')[0];
-    const shareUrl = `${currentUrl}?id=${projectData.project.id}`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      alert(translations[currentLang].shareSuccess || "Link copiado para a área de transferência!");
-    }).catch(err => {
-      // console.error('Erro ao copiar URL:', err);
-      alert(translations[currentLang].shareError || "Erro ao copiar o link.");
-    });
+  d.i('shareBtnMobile').addEventListener('click', async () => {
+    d.i('shareBtn').click();
   });
 
+  d.i('shareBtn').addEventListener('click', async () => {
+    bkend.share();
+  });
+
+  d.i('observeBtnMobile').addEventListener('click', () => {
+    d.i('observeBtn').click();
+  });
+  d.i('observeBtn').addEventListener('click', () => {
+    bkend.observe();
+  });
+
+  d.i('usersBtnMobile').addEventListener('click', () => {
+    d.i('usersBtn').click();
+  });
   d.i('usersBtn').addEventListener('click', () => {
     buildUsersModal();
     d.i('usersModal').showModal();
@@ -524,83 +515,16 @@ window.addEventListener('load', function () {
     document.body.classList.remove('bg-opacity-50', 'bg-gray-500');
   });
 
-  d.i('fontIncrease').addEventListener('click', () => {
-    if (fontSize < 3) {
-      fontSize += 0.5;
-      document.body.style.fontSize = `${fontSize}rem`;
-    }
-  });
-
-  d.i('fontDecrease').addEventListener('click', () => {
-    if (fontSize > 0.5) {
-      fontSize -= 0.5;
-      document.body.style.fontSize = `${fontSize}rem`;
-    }
-  });
-
   d.i('languageBtn').addEventListener('click', () => {
     const mnu = d.i('languageMenu');
     mnu.classList.toggle('hidden');
   });
 
+  d.i('saveBtnMobile').addEventListener('click', async () => {
+    bkend.save();
+  });
   d.i('saveBtn').addEventListener('click', async () => {
-    const header = d.s('header');
-
-    header.classList.add('blur-sm', 'relative');
-    const saveMessage = d.c('div');
-    saveMessage.className = 'absolute inset-0 flex items-center justify-center text-white text-lg';
-    saveMessage.textContent = translations[currentLang].saving || "Salvando...";
-    header.appendChild(saveMessage);
-
-    if (projectData.project.id == 1) {
-      try {
-        const response = await fetch(`${url_base}/${_action.uuid}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error('Falha ao obter UUID');
-        const data = await response.json();
-        projectData.project.id = data.uuid; // Atualiza o ID do projeto com o UUID retornado
-      } catch (error) {
-        // console.error('Erro ao criar novo projeto:', error);
-        alert(translations[currentLang].uuidError);
-      }
-    }
-
-    try {
-      const response = await fetch(`${url_base}/${projectData.project.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: projectData.project.id,
-          name: projectData.project.name,
-          tasks: projectData.project.tasks,
-          resources: projectData.project.resources,
-          columnVisibility: projectData.project.columnVisibility,
-          columnOrder: projectData.project.columnOrder,
-          columnNames: projectData.project.columnNames,
-          statusColors: projectData.project.statusColors,
-        })
-      });
-
-      if (!response.ok) throw new Error('Falha ao salvar');
-
-      header.classList.remove('blur-sm');
-      saveMessage.remove();
-
-      const successMessage = d.c('div');
-      successMessage.className = 'absolute inset-0 flex items-center justify-center text-green-300 text-lg';
-      successMessage.textContent = translations[currentLang].saveSuccess || "Salvo com sucesso!";
-      header.appendChild(successMessage);
-      setTimeout(() => successMessage.remove(), 2000);
-
-      saveToLocalStorage();
-    } catch (error) {
-      // console.error('Erro ao salvar:', error);
-      header.classList.remove('blur-sm');
-      saveMessage.textContent = translations[currentLang].saveError || "Erro ao salvar.";
-      setTimeout(() => saveMessage.remove(), 2000);
-    }
+    bkend.save();
   });
 
   d.q('#languageMenu button').forEach(btn => {
@@ -654,6 +578,35 @@ window.addEventListener('load', function () {
     resource: new Set(projectData.project.tasks.map(t => t.resource)),
     predecessors: new Set(projectData.project.tasks.map(t => t.predecessors))
   };
+
+  document.getElementById('leftMenuBtn').addEventListener('click', function () {
+      const leftDropdown = document.getElementById('leftDropdown');
+      leftDropdown.classList.toggle('hidden');
+  });
+
+  document.getElementById('rightMenuBtn').addEventListener('click', function () {
+      const rightDropdown = document.getElementById('rightDropdown');
+      rightDropdown.classList.toggle('hidden');
+  });
+
+  // Fechar os dropdowns ao clicar fora deles
+  document.addEventListener('click', function (event) {
+      const leftBtn = document.getElementById('leftMenuBtn');
+      const rightBtn = document.getElementById('rightMenuBtn');
+      const leftDropdown = document.getElementById('leftDropdown');
+      const rightDropdown = document.getElementById('rightDropdown');
+
+      if (!leftBtn.contains(event.target) && !leftDropdown.contains(event.target)) {
+          leftDropdown.classList.add('hidden');
+      }
+      if (!rightBtn.contains(event.target) && !rightDropdown.contains(event.target)) {
+          rightDropdown.classList.add('hidden');
+      }
+  });
+
+  if (window.innerWidth < 800) {
+    toggleLayout()
+  }
 });
 
 async function loadProjectFromServer() {
@@ -661,6 +614,7 @@ async function loadProjectFromServer() {
   if (!uuidParamProject) {
     return;
   }
+  var hideOverlay = showProcessingOverlay();
   try {
     const response = await fetch(`${url_base}/${uuidParamProject}`, {
       method: 'GET',
@@ -698,9 +652,16 @@ async function loadProjectFromServer() {
     // console.log('Projeto carregado:', projectData);
     GridManager.renderFullGrid()
     buildGantt();
+    setTimeout(_=>{
+      hideOverlay()
+    }, 300)
   } catch (error) {
+    setTimeout(_=>{
+      hideOverlay()
+    }, 300)
     // console.error('Erro ao carregar projeto:', error);
-    alert(translations[currentLang].loadError || "Erro ao carregar o projeto.");
+    // alert(translations[currentLang].loadError || "Erro ao carregar o projeto.");
+    showSuccessTooltip("Error.")
   }
 }
 
@@ -839,7 +800,6 @@ function toggleLayout() {
   projectData.project.timeline = generateTimeline(projectData.project.tasks);
   GridManager.renderFullGrid();
   buildGantt();
-  saveToLocalStorage();
 }
 
 function showFilterMenu(col, elm) {
@@ -924,45 +884,15 @@ function isTaskVisible(tid) {
 }
 
 async function newProject() {
-  var id = Date.now();
-  try {
-    const response = await fetch(`${url_base}/${_action.uuid}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!response.ok) throw new Error('Falha ao obter UUID');
-    const data = await response.json();
-    id = data.uuid; // Atualiza o ID do projeto com o UUID retornado
-    saveToLocalStorage(); // Salva no localStorage
-    // Outras inicializações do projeto, se houver
-  } catch (error) {
-    // console.error('Erro ao criar novo projeto:', error);
-    alert(translations[currentLang].uuidError);
-  }
+  var id = await bkend.new();
 
   if (confirm(translations[currentLang].confirmNewProject)) {
-
-    const now = new Date();
-    std = new Date(now);
-    end = new Date(now);
+    const now = new Date().toISOString().split('T')[0];
     projectData = {
       "project": {
         "id": id,
         "name": translations[currentLang].newProject,
-        "tasks": [{
-          "id": 1,
-          "name": "Planejamento Inicial",
-          "duration": 1,
-          "status": "inProgress",
-          "resource": "",
-          "parentId": null,
-          "predecessors": "-",
-          "start": std,
-          "end": end,
-          "percentComplete": 9,
-          "level": 0,
-          "expanded": true
-        }],
+        "tasks": [],
         "resources": [
           {"id": 1, "name": "Recurso 1", "level": "Jr"},
           {"id": 2, "name": "Recurso 2", "level": "Pl"},
@@ -1010,20 +940,18 @@ async function newProject() {
     buildGantt();
     buildUsersModal();
     saveToLocalStorage();
+
+    GridManager.addNewTaskRow();
   }
 }
 
 async function saveToLocalStorage() {
   const dat = { project: { ...projectData.project } };
-  if (dat.project.id == 1) {
-    const response = await fetch(`${url_base}/${_action.uuid}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!response.ok) throw new Error('Falha ao obter UUID');
-    const data = await response.json();
-    dat.project.id = data.uuid;
+  if (projectData.project.id == 1) {
+    dat.project.id = await bkend.new();
+    projectData.project.id = dat.project.id;
   }
+
   delete dat.project.columnNames;
   const str = JSON.stringify(dat);
   const siz = new Blob([str]).size;
@@ -1295,6 +1223,7 @@ function showStatusSelect(idx, elm) {
       }
       d.s('h1').textContent = projectData.project.name || "Projeto sem nome";
       d.i('downloadBtn').disabled = !projectData.project.name;
+      d.i('downloadBtnMobile').disabled = d.i('downloadBtn').disabled;
       this.renderFullGrid();
     },
 
@@ -2740,4 +2669,242 @@ function getParameterByName(name) {
     if (!results) return null;
     if (!results[2]) return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+const bkend = {
+  observe: async function() {
+    var hideOverlay = showProcessingOverlay();
+    try {
+      await bkend.save();
+      // Fazer a requisição ao endpoint
+      const response = await fetch(`/reference/${projectData.project.id}`);
+      const data = await response.json();
+      const uuid = data.UUID; // Exemplo: "101"
+
+      // Copiar o UUID para a área de transferência
+      await navigator.clipboard.writeText(bkend.url(uuid));
+
+      showSuccessTooltip(getTranslation('notification'))
+      hideOverlay();
+    } catch (error) {
+        // showNotification('Erro ao copiar o link', 'error'); // Notificação de erro
+        hideOverlay();
+    }
+  },
+  new: async function() {
+      var hideOverlay = showProcessingOverlay();
+      try {
+        const response = await fetch(`${url_base}/${_action.uuid}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        setTimeout(_=>{
+          hideOverlay()
+        }, 300)
+        if (!response.ok) throw new Error('Falha ao obter UUID');
+        const data = await response.json();
+        return data.uuid; // Atualiza o ID do projeto com o UUID retornado
+      } catch (error) {
+        setTimeout(_=>{
+          hideOverlay()
+        }, 300)
+        // console.error('Erro ao criar novo projeto:', error);
+        showErrorTooltip(getTranslation('uuidError'))
+      }
+      return 1;
+  },
+  save: async function() {
+    if (projectData.project.id == 1) {
+      projectData.project.id = await bkend.new();
+    }
+
+    var hideOverlay = showProcessingOverlay();
+    try {
+      const response = await fetch(`${url_base}/${projectData.project.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: projectData.project.id,
+          name: projectData.project.name,
+          tasks: projectData.project.tasks,
+          resources: projectData.project.resources,
+          columnVisibility: projectData.project.columnVisibility,
+          columnOrder: projectData.project.columnOrder,
+          columnNames: projectData.project.columnNames,
+          statusColors: projectData.project.statusColors,
+        })
+      });
+      setTimeout(_=>{
+        hideOverlay()
+      }, 300)
+      if (!response.ok) throw new Error('Falha ao salvar');
+
+      showSuccessTooltip(getTranslation('saveSuccess'))
+
+      saveToLocalStorage();
+    } catch (error) {
+      showErrorTooltip("Error.");
+    }
+  },
+  share: async function() {
+    if (projectData.project.id == 1) {
+      projectData.project.id = await bkend.new();
+    }
+
+    hideOverlay = showProcessingOverlay();
+    const response = await fetch(`${url_base}/${projectData.project.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: projectData.project.id,
+        name: projectData.project.name,
+        tasks: projectData.project.tasks,
+        resources: projectData.project.resources,
+        columnVisibility: projectData.project.columnVisibility,
+        columnOrder: projectData.project.columnOrder,
+        columnNames: projectData.project.columnNames,
+        statusColors: projectData.project.statusColors,
+      })
+    });
+    setTimeout(_=>{
+      hideOverlay()
+    }, 300)
+    if (!response.ok) throw new Error('Falha ao salvar');
+
+    navigator.clipboard.writeText(bkend.url(projectData.project.id)).then(() => {
+      showSuccessTooltip(translations[currentLang].shareSuccess || "Link copiado para a área de transferência!");
+    }).catch(err => {
+      // console.error('Erro ao copiar URL:', err);
+      showErrorTooltip(translations[currentLang].shareError || "Erro ao copiar o link.");
+    });
+  },
+  url: function(uuid) {
+    const currentUrl = window.location.href.split('?')[0].split('#')[0];
+    return `${currentUrl}?id=${uuid}`;
+  }
+}
+
+
+// Container para as notificações
+const notificationContainer = document.getElementById('notification-container');
+
+function createNotification(message, type) {
+    // Criar o elemento do tooltip
+    const tooltip = document.createElement('div');
+
+    // Estilo base com condicional para tipo (success ou error)
+    const baseStyle = 'flex items-center p-4 text-sm shadow-lg animate-fade-in transition-all duration-300';
+    const typeStyle = type === 'success'
+        ? 'text-green-800 bg-green-50'
+        : 'text-red-800 bg-red-50';
+    const iconStyle = type === 'success'
+        ? 'fas fa-check-circle text-green-500 mr-2'
+        : 'fas fa-exclamation-circle text-red-500 mr-2';
+
+        tooltip.className = `${baseStyle} ${typeStyle}`;
+
+    // Adicionar conteúdo
+    tooltip.innerHTML = `
+        <i class="${iconStyle}"></i>
+        <span>${message}</span>
+    `;
+
+    // Adicionar ao container como primeiro elemento
+    notificationContainer.insertBefore(tooltip, notificationContainer.firstChild);
+
+    // Remover após 3 segundos e ajustar posição dos restantes
+    setTimeout(() => {
+        tooltip.classList.remove('animate-fade-in');
+        tooltip.classList.add('animate-fade-out');
+        setTimeout(() => {
+            tooltip.remove();
+        }, 300);
+    }, 3000);
+}
+
+function showSuccessTooltip(message) {
+    createNotification(message, 'success');
+}
+
+function showErrorTooltip(message) {
+    createNotification(message, 'error');
+}
+
+// Função para criar e gerenciar o overlay de processamento
+function showProcessingOverlay(message = translations[currentLang].processing) {
+  // Verificar se já existe um overlay
+  let overlay = document.getElementById('processing-overlay');
+
+  // Se não existe, criar
+  if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'processing-overlay';
+      overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity duration-300';
+
+      // Conteúdo do overlay
+      overlay.innerHTML = `
+          <div class="flex items-center p-6 bg-white shadow-xl">
+              <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mr-3"></i>
+              <span class="text-gray-800 text-lg font-medium" id="processing-message">${message}</span>
+          </div>
+      `;
+
+      // Adicionar ao body
+      document.body.appendChild(overlay);
+
+      // Garantir que comece invisível e faça fade in
+      setTimeout(() => {
+          overlay.classList.add('opacity-100');
+      }, 10);
+  } else {
+      // Atualizar mensagem se overlay já existe
+      document.getElementById('processing-message').textContent = message;
+  }
+
+  // Aplicar estilo ao conteúdo da página
+  const pageContent = document.getElementById('page-content');
+  if (pageContent) {
+      pageContent.classList.add('pointer-events-none', 'opacity-50');
+  }
+
+  // Função para remover o overlay
+  function removeOverlay() {
+      if (overlay) {
+          overlay.classList.remove('opacity-100');
+          setTimeout(() => {
+              overlay.remove();
+              if (pageContent) {
+                  pageContent.classList.remove('pointer-events-none', 'opacity-50');
+              }
+          }, 300);
+      }
+  }
+
+  // Retornar função para remover o overlay quando necessário
+  return removeOverlay;
+}
+
+// Configuração do Tailwind
+tailwind.config = {
+    theme: {
+        extend: {
+            animation: {
+                'fade-in': 'fadeIn 0.3s ease-in',
+                'fade-out': 'fadeOut 0.3s ease-out'
+            },
+            keyframes: {
+                fadeIn: {
+                    '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' }
+                },
+                fadeOut: {
+                    '0%': { opacity: '1', transform: 'translateY(0)' },
+                    '100%': { opacity: '0', transform: 'translateY(-10px)' }
+                }
+            },
+            transitionOpacity: {
+                '300': 'opacity 0.3s ease-in-out'
+            }
+        }
+    }
 }
