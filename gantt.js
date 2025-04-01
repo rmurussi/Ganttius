@@ -2681,10 +2681,9 @@ const bkend = {
       // Fazer a requisição ao endpoint
       const response = await fetch(`${url_base}/${_action.reference}/${projectData.project.id}`, {method: 'POST',});
       const data = await response.json();
-      const uuid = data.UUID; // Exemplo: "101"
 
       // Copiar o UUID para a área de transferência
-      await navigator.clipboard.writeText(bkend.url(uuid));
+      await navigator.clipboard.writeText(bkend.url(data.uuid));
 
       showSuccessTooltip(getTranslation('notification'))
       hideOverlay();
