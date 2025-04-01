@@ -1223,7 +1223,6 @@ function showStatusSelect(idx, elm) {
       }
       d.s('h1').textContent = projectData.project.name || "Projeto sem nome";
       d.i('downloadBtn').disabled = !projectData.project.name;
-      d.i('downloadBtnMobile').disabled = !projectData.project.name;
       this.renderFullGrid();
     },
 
