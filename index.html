@@ -19,31 +19,57 @@
     <body class="bg-gray-50 font-sans antialiased" style="font-size: 1rem">
         <!-- Header -->
         <header class="bg-indigo-600 text-white p-4 flex justify-between items-center">
-            <div class="flex space-x-4 btn-container">
-                <button id="downloadBtn" class="p-2 rounded-xs shadow-md text-white disabled:opacity-50" disabled><i class="fas fa-download"></i></button>
-                <label class="p-2 rounded-xs shadow-md text-white cursor-pointer"><i class="fas fa-upload"></i><input type="file" id="uploadInput" class="hidden" accept=".json"></label>
-                <button id="sidebarBtn" class="p-2 rounded-xs shadow-md text-white" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <!-- <button id="syncBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-cloud-upload-alt"></i></button> -->
-                <button id="saveBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-save"></i></button>
-                <button id="shareBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-share-alt"></i></button>
+            <!-- Botões da esquerda -->
+            <div class="flex space-x-4 btn-container left-buttons relative">
+                <!-- Botão principal à esquerda (visível em telas pequenas) -->
+                <button id="leftMenuBtn" class="p-2 rounded-xs shadow-md text-white md:hidden"><i class="fas fa-bars"></i></button>
+                <!-- Botões normais (escondidos em telas pequenas) -->
+                <div class="flex space-x-4 md:flex hidden">
+                    <button id="downloadBtn" class="p-2 rounded-xs shadow-md text-white disabled:opacity-50"><i class="fas fa-download"></i></button>
+                    <label class="p-2 rounded-xs shadow-md text-white cursor-pointer"><i class="fas fa-upload"></i><input type="file" id="uploadInput" class="hidden" accept=".json"></label>
+                    <button id="sidebarBtn" class="p-2 rounded-xs shadow-md text-white" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <button id="saveBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-save"></i></button>
+                    <button id="shareBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-share-alt"></i></button>
+                    <button id="observeBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-binoculars"></i></button>
+                </div>
+                <!-- Dropdown à esquerda (visível ao clicar em telas pequenas) -->
+                <div id="leftDropdown" class="hidden absolute top-12 left-0 bg-white text-gray-800 rounded shadow-lg text-xs w-12 z-50 flex-col">
+                    <button id="downloadBtnMobile" class="w-full block px-4 py-2 hover:bg-gray-100 text-left"><i class="fas fa-download mr-2"></i></button>
+                    <label class="w-full block px-4 py-2 hover:bg-gray-100 cursor-pointer text-left"><i class="fas fa-upload mr-2"></i><input type="file" id="uploadInputMobile" class="hidden" accept=".json"></label>
+                    <button id="saveBtnMobile" class="w-full block px-4 py-2 hover:bg-gray-100 text-left"><i class="fas fa-save mr-2"></i></button>
+                    <button id="shareBtnMobile" class="w-full block px-4 py-2 hover:bg-gray-100 text-left"><i class="fas fa-share-alt mr-2"></i></button>
+                    <button id="observeBtnMobile" class="w-full block px-4 py-2 hover:bg-gray-100 text-left"><i class="fas fa-binoculars mr-2"></i></button>
+                </div>
             </div>
+
+            <!-- Título central -->
             <div class="flex items-center space-x-2">
-                <h1 class="text-2xl" contenteditable="false" onblur="updateProjectName(this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true"></h1>
+                <h1 class="text-2xl" contenteditable="false" onblur="updateProjectName(this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true">Diagramma Ganttius</h1>
                 <button id="newProjectBtn" class="p-2 rounded-xs shadow-md text-white" onclick="newProject()"><i class="fas fa-file"></i></button>
             </div>
-            <div class="flex space-x-4">
-                <button id="usersBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-users"></i></button>
-                <button id="layoutBtn" class="p-2 rounded-xs shadow-md text-white" onclick="toggleLayout()"><i class="fas fa-columns"></i></button>
-                <div class="relative">
-                    <button id="languageBtn" class="p-2 rounded-xs shadow-md text-white">🇧🇷</button>
-                    <div id="languageMenu" class="hidden absolute right-0 mt-2 bg-white text-gray-800 rounded shadow-lg text-xs w-[50px]" style="z-index: 1;">
-                        <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="pt-BR">BR</button>
-                        <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="en">ENG</button>
-                        <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="es">ES</button>
+
+            <!-- Botões da direita -->
+            <div class="flex space-x-4 right-buttons relative">
+                <!-- Botão principal à direita (visível em telas pequenas) -->
+                <button id="rightMenuBtn" class="p-2 rounded-xs shadow-md text-white md:hidden"><i class="fas fa-ellipsis-v"></i></button>
+                <!-- Botões normais (escondidos em telas pequenas) -->
+                <div class="flex space-x-4 md:flex hidden">
+                    <button id="usersBtn" class="p-2 rounded-xs shadow-md text-white"><i class="fas fa-users"></i></button>
+                    <button id="layoutBtn" class="p-2 rounded-xs shadow-md text-white" onclick="toggleLayout()"><i class="fas fa-columns"></i></button>
+                    <div class="relative">
+                        <button id="languageBtn" class="p-2 rounded-xs shadow-md text-white">BR</button>
+                        <div id="languageMenu" class="hidden absolute right-0 mt-2 bg-white text-gray-800 rounded shadow-lg text-xs w-[50px] z-10">
+                            <button class="w-full block px-4 py-2 hover:bg-gray-100"-release data-lang="pt-BR">BR</button>
+                            <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="en">ENG</button>
+                            <button class="w-full block px-4 py-2 hover:bg-gray-100" data-lang="es">ES</button>
+                        </div>
                     </div>
                 </div>
-                <button id="fontIncrease" class="hidden p-2 rounded-xs shadow-md text-white"><i class="fas fa-plus"></i></button>
-                <button id="fontDecrease" class="hidden p-2 rounded-xs shadow-md text-white"><i class="fas fa-minus"></i></button>
+                <!-- Dropdown à direita (visível ao clicar em telas pequenas) -->
+                <div id="rightDropdown" class="hidden absolute top-12 right-0 bg-white text-gray-800 rounded shadow-lg text-xs w-12 z-50 flex-col">
+                    <button id="usersBtnMobile" class="w-full block px-4 py-2 hover:bg-gray-100 text-left"><i class="fas fa-users mr-2"></i></button>
+                    <button id="layoutBtnMobile" class="w-full block px-4 py-2 hover:bg-gray-100 text-left" onclick="toggleLayout()"><i class="fas fa-columns mr-2"></i></button>
+                </div>
             </div>
         </header>
 
@@ -101,5 +127,7 @@
                 </div>
             </div>
         </div>
+
+        <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-min[200px]"></div>
     </body>
 </html>
