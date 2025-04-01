@@ -358,6 +358,7 @@ let fontSize = 1;
 
 const _action = {
   "uuid": "uuid",
+  "reference": "reference",
 };
 
 window.addEventListener('load', function () {
@@ -2676,7 +2677,7 @@ const bkend = {
     try {
       await bkend.save();
       // Fazer a requisição ao endpoint
-      const response = await fetch(`/reference/${projectData.project.id}`);
+      const response = await fetch(`${url_base}/${_action.reference}/${projectData.project.id}`);
       const data = await response.json();
       const uuid = data.UUID; // Exemplo: "101"
 
