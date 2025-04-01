@@ -608,6 +608,10 @@ window.addEventListener('load', function () {
   if (window.innerWidth < 800) {
     toggleLayout()
   }
+
+
+  // Container para as notificações
+  const notificationContainer = document.getElementById('notification-container');
 });
 
 async function loadProjectFromServer() {
@@ -2677,7 +2681,7 @@ const bkend = {
     try {
       await bkend.save();
       // Fazer a requisição ao endpoint
-      const response = await fetch(`${url_base}/${_action.reference}/${projectData.project.id}`);
+      const response = await fetch(`${url_base}/${_action.reference}/${projectData.project.id}`, {method: 'POST',});
       const data = await response.json();
       const uuid = data.UUID; // Exemplo: "101"
 
@@ -2783,10 +2787,6 @@ const bkend = {
     return `${currentUrl}?id=${uuid}`;
   }
 }
-
-
-// Container para as notificações
-const notificationContainer = document.getElementById('notification-container');
 
 function createNotification(message, type) {
     // Criar o elemento do tooltip
