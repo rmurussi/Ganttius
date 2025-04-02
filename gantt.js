@@ -651,7 +651,6 @@ async function loadProjectFromServer() {
       predecessors: new Set(projectData.project.tasks.map(t => t.predecessors))
     };
     projectData.project.timeline = generateTimeline(projectData.project.tasks);
-    saveToLocalStorage(); // Salva no localStorage
     // Aqui você pode adicionar código para atualizar a UI com os dados carregados
     // console.log('Projeto carregado:', projectData);
     GridManager.renderFullGrid()
@@ -780,7 +779,6 @@ function dropColumn(evt, tgt) {
   updateGridHeaders();
 // buildGrid();
   GridManager.renderFullGrid();
-  saveToLocalStorage();
   draggedColumn = null;
 }
 
@@ -852,7 +850,7 @@ function toggleFilter(col, val, chk) {
   // buildGrid();
   GridManager.update();
   buildGantt();
-  saveToLocalStorage();
+
 }
 
 function isTaskVisible(tid) {
@@ -943,13 +941,16 @@ async function newProject() {
     GridManager.renderFullGrid();
     buildGantt();
     buildUsersModal();
-    saveToLocalStorage();
 
     GridManager.addNewTaskRow();
   }
 }
 
-async function saveToLocalStorage() {
+async function saveToLocalStorage(httpCode) {
+  if (httpCode != 200) {
+    return false;
+  }
+
   const dat = { project: { ...projectData.project } };
   if (projectData.project.id == 1) {
     dat.project.id = await bkend.new();
@@ -1156,7 +1157,6 @@ function showPredecessorInput(idx, elm) {
     // buildGrid();
     GridManager.update([idx]);
     buildGantt(); // Já chama buildArrows internamente
-    saveToLocalStorage();
   };
   inp.onkeydown = (e) => { if (e.key === 'Enter') inp.blur(); };
   elm.innerHTML = '';
@@ -1202,7 +1202,6 @@ function showStatusSelect(idx, elm) {
     // buildGrid(); // Recria a grid com o novo status
       GridManager.renderFullGrid();
       buildGantt();
-      saveToLocalStorage();
     };
 
 // Substitui o conteúdo de elm pelo select
@@ -1410,7 +1409,6 @@ function showStatusSelect(idx, elm) {
           this.updateRow(projectData.project.tasks.length - 1);
           projectData.project.timeline = generateTimeline(projectData.project.tasks);
           buildGantt();
-          saveToLocalStorage();
         },
 
 // Vincula eventos a uma linha
@@ -1446,7 +1444,6 @@ function showStatusSelect(idx, elm) {
       });
       projectData.project.timeline = generateTimeline(projectData.project.tasks);
       buildGantt();
-      saveToLocalStorage();
     }
   };
 
@@ -1855,7 +1852,6 @@ function shiftRight(idx) {
 // buildGrid();
   GridManager.renderFullGrid();
   buildGantt();
-  saveToLocalStorage();
 }
 
 function shiftLeft(idx) {
@@ -1902,7 +1898,6 @@ function shiftLeft(idx) {
   projectData.project.timeline = generateTimeline(tasks);
   GridManager.renderFullGrid();
   buildGantt();
-  saveToLocalStorage();
 }
 
 function toggleExpand(idx) {
@@ -1911,14 +1906,12 @@ function toggleExpand(idx) {
   // buildGrid();
   GridManager.renderFullGrid(); // Pode afetar várias linhas (filhos)
   buildGantt();
-  saveToLocalStorage();
 }
 
 function updateProjectName(elm) {
   elm.contentEditable = false;
   projectData.project.name = elm.textContent.trim() || "Projeto sem nome";
   GridManager.init();
-  saveToLocalStorage();
 }
 
 function updatePercentComplete(idx, elm) {
@@ -1946,7 +1939,6 @@ function updatePercentComplete(idx, elm) {
   // buildGrid();
   GridManager.update([idx]);
   buildGantt();
-  saveToLocalStorage();
 }
 
 function updateDuration(idx, elm) {
@@ -1969,7 +1961,6 @@ function updateDuration(idx, elm) {
   // buildGrid();
   GridManager.renderFullGrid();
   buildGantt();
-  saveToLocalStorage();
 }
 
 function updateTask(idx, fld, elm) {
@@ -1989,7 +1980,6 @@ function updateTask(idx, fld, elm) {
       // buildGrid();
     GridManager.renderFullGrid();
     buildGantt();
-    saveToLocalStorage();
   }
 }
 
@@ -2009,7 +1999,6 @@ function showPredecessorSelect(idx, elm) {
     projectData.project.timeline = generateTimeline(projectData.project.tasks);
     buildGrid();
     buildGantt();
-    saveToLocalStorage();
   };
   sel.onblur = () => elm.textContent = sel.value;
   elm.innerHTML = '';
@@ -2041,7 +2030,6 @@ function showResourceSelect(idx, elm) {
     elm.innerHTML = val === '-' ? '-' : `<i class="${getResourceIcon(val)} mr-1"></i>${val}`;
     GridManager.update([idx]);
     buildGantt();
-    saveToLocalStorage();
   };
   elm.innerHTML = '';
   elm.ac(sel);
@@ -2142,14 +2130,12 @@ function updateResource(idx, elm) {
   projectData.project.resources[idx].name = elm.textContent.trim() || `Recurso ${idx + 1}`;
   buildGrid();
   buildUsersModal();
-  saveToLocalStorage();
 }
 
 function updateResourceLevel(idx, lvl) {
   projectData.project.resources[idx].level = lvl;
   buildUsersModal();
   updateResourceColumnInGrid();
-  saveToLocalStorage();
 }
 
 function saveNewResource(inp) {
@@ -2173,7 +2159,6 @@ function saveNewResource(inp) {
 
     buildUsersModal();
     updateResourceColumnInGrid();
-    saveToLocalStorage();
   }
 }
 
@@ -2270,7 +2255,6 @@ function updateDate(idx, fld, inp) {
   // buildGrid();
       GridManager.renderFullGrid();
       buildGantt();
-      saveToLocalStorage();
     }
 
     function recalculateDependentTasks(idx) {
@@ -2473,7 +2457,6 @@ function dropTask(evt, targetIdx) {
   projectData.project.timeline = generateTimeline(tasks);
   GridManager.renderFullGrid();
   buildGantt();
-  saveToLocalStorage();
 
   // Destaca as linhas envolvidas
   const draggedRow = GridManager.taskRows.get(tasks.indexOf(draggedTask));
@@ -2595,7 +2578,6 @@ function toggleColumn(col, vis) {
   updateGridHeaders();
 // buildGrid();
   GridManager.renderFullGrid();
-  saveToLocalStorage();
 }
 
 function renameColumn(key, elm) {
@@ -2608,7 +2590,6 @@ function renameColumn(key, elm) {
       projectData.project.columnNames[key] = val;
       translations[currentLang][key] = val;
       updateGridHeaders();
-      saveToLocalStorage();
       const mnu = d.i('columnConfigMenu');
       if (mnu) showColumnConfigMenu();
     }
@@ -2630,7 +2611,6 @@ function updateStatusColor(idx, clr) {
   GridManager.renderFullGrid();
 
   buildGantt();
-  saveToLocalStorage();
 }
 
 function addBusinessDays(stDt, days) {
@@ -2748,9 +2728,9 @@ const bkend = {
       httpCode = response.status;
       if (!response.ok) throw new Error('Falha ao salvar');
 
-      showSuccessTooltip(getTranslation('saveSuccess'))
+      showSuccessTooltip(getTranslation('saveSuccess'));
 
-      saveToLocalStorage();
+      saveToLocalStorage(httpCode);
 
     } catch (error) {
       if (httpCode != 403) {
