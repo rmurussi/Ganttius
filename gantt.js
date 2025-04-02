@@ -643,7 +643,8 @@ async function loadProjectFromServer() {
        },
       );
     }
-    projectData = {project: project}; // Substitui os dados locais pelo projeto carregado
+    projectData = {project: project};
+    d.s('h1').textContent = projectData.project.name
     projectData.project.filters = {
       status: new Set(projectData.project.tasks.map(t => t.status)),
       resource: new Set(projectData.project.tasks.map(t => t.resource)),
@@ -1285,76 +1286,76 @@ function showStatusSelect(idx, elm) {
           ${task.level > 0 ? `<i class="fas fa-arrow-left text-gray-600 cursor-pointer ml-1" onclick="shiftLeft(${idx})"></i>` : ''}
           ${idx === projectData.project.tasks.length - 1 ? `<i class="fas fa-plus text-green-600 cursor-pointer ml-1" title="${translations[currentLang].addTask}" onclick="GridManager.addNewTaskRow()"></i>` : ''}
           </td>`;
-        case 'percentComplete':
-          return isEmptyName
-          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true"></td>`
-          : (chd
-            ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
-            : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true; this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
-        case 'status':
-          return isEmptyName
-          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
-          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${translations[currentLang][task.status] || task.status}" ondblclick="showStatusSelect(${idx}, this)">
-                    <span class="inline-block px-2 py-1 text-xs text-gray-800 ${getStatusColor(task.status)} rounded-full" onmouseenter="showColorMenu(${idx}, this)" onmouseleave="hideColorMenu()">
-                        ${translations[currentLang][task.status] || task.status}
-                    </span>
+      case 'percentComplete':
+        return isEmptyName
+        ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
+        : (chd
+          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
+          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);" this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
+      case 'status':
+        return isEmptyName
+        ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
+        : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${translations[currentLang][task.status] || task.status}" ondblclick="showStatusSelect(${idx}, this)">
+                  <span class="inline-block px-2 py-1 text-xs text-gray-800 ${getStatusColor(task.status)} rounded-full" onmouseenter="showColorMenu(${idx}, this)" onmouseleave="hideColorMenu()">
+                      ${translations[currentLang][task.status] || task.status}
+                  </span>
+        </td>`;
+      case 'name':
+        return `
+              <td class="p-1 text-xs truncate max-w-[200px] ${chd ? 'underline' : ''}" title="${task.name}" contenteditable="false" onblur="updateTask(${idx}, 'name', this)" ondblclick="editAbleDiv(this);" style="padding-left: ${task.level * 15}px">
+          ${chd ? `<i class="fas fa-${task.expanded ? 'minus' : 'plus'} text-gray-600 cursor-pointer mr-1" onclick="toggleExpand(${idx})"></i>` : ''}${task.name}
           </td>`;
-        case 'name':
-          return `
-                <td class="p-1 text-xs truncate max-w-[200px] ${chd ? 'underline' : ''}" title="${task.name}" contenteditable="false" onblur="updateTask(${idx}, 'name', this)" ondblclick="this.contentEditable=true" style="padding-left: ${task.level * 15}px">
-            ${chd ? `<i class="fas fa-${task.expanded ? 'minus' : 'plus'} text-gray-600 cursor-pointer mr-1" onclick="toggleExpand(${idx})"></i>` : ''}${task.name}
-            </td>`;
-          case 'duration':
-            return isEmptyName
-            ? `<td class="p-1 text-xs truncate max-w-[100px]" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true"></td>`
-            : (chd
-              ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`
-              : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="this.contentEditable=true; this.textContent='${task.duration}'">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`);
-          case 'start':
-            return isEmptyName
-            ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'start', this)"></td>`
-            : (chd
-              ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}">${task.start}</td>`
-              : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}" ondblclick="showDatePicker(${idx}, 'start', this)">${task.start}</td>`);
-          case 'end':
-            return isEmptyName
-            ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'end', this)"></td>`
-            : (chd
-              ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}">${task.end}</td>`
-              : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}" ondblclick="showDatePicker(${idx}, 'end', this)">${task.end}</td>`);
-          case 'resource':
-            return isEmptyName
-            ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showResourceSelect(${idx}, this)"></td>`
-            : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.resource || '-'}" ondblclick="showResourceSelect(${idx}, this)">
-            ${task.resource && task.resource !== '-' ? `<i class="${getResourceIcon(task.resource)} mr-1"></i>${task.resource}` : '-'}
-            </td>`;
-          case 'predecessors':
-            return isEmptyName
-            ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showPredecessorInput(${idx}, this)"></td>`
-            : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.predecessors || '-'}" ondblclick="showPredecessorInput(${idx}, this)" onmouseenter="highlightPredecessorRows(${idx})" onmouseleave="unhighlightPredecessorRows(${idx})">
-                    ${task.predecessors && task.predecessors !== '-' ? task.predecessors : '-'}
-            </td>`;
-          default:
-            return `<td class="p-1 text-xs truncate max-w-[100px]">${task[col] || '-'}</td>`;
-          }
-        },
+      case 'duration':
+        return isEmptyName
+        ? `<td class="p-1 text-xs truncate max-w-[100px]" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
+        : (chd
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`
+          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent='${task.duration}'">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`);
+      case 'start':
+        return isEmptyName
+        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'start', this)"></td>`
+        : (chd
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}">${task.start}</td>`
+          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}" ondblclick="showDatePicker(${idx}, 'start', this)">${task.start}</td>`);
+      case 'end':
+        return isEmptyName
+        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'end', this)"></td>`
+        : (chd
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}">${task.end}</td>`
+          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}" ondblclick="showDatePicker(${idx}, 'end', this)">${task.end}</td>`);
+      case 'resource':
+        return isEmptyName
+        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showResourceSelect(${idx}, this)"></td>`
+        : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.resource || '-'}" ondblclick="showResourceSelect(${idx}, this)">
+        ${task.resource && task.resource !== '-' ? `<i class="${getResourceIcon(task.resource)} mr-1"></i>${task.resource}` : '-'}
+        </td>`;
+      case 'predecessors':
+        return isEmptyName
+        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showPredecessorInput(${idx}, this)"></td>`
+        : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.predecessors || '-'}" ondblclick="showPredecessorInput(${idx}, this)" onmouseenter="highlightPredecessorRows(${idx})" onmouseleave="unhighlightPredecessorRows(${idx})">
+                ${task.predecessors && task.predecessors !== '-' ? task.predecessors : '-'}
+        </td>`;
+      default:
+        return `<td class="p-1 text-xs truncate max-w-[100px]">${task[col] || '-'}</td>`;
+      }
+    },
 
 // Atualiza apenas uma linha específica
-        updateRow(idx) {
-          const task = projectData.project.tasks[idx];
-          if (!isTaskVisible(task.id)) {
-            this.removeRow(idx);
-            return;
-          }
-          let row = this.taskRows.get(idx);
-          if (!row) {
-            row = this.createTaskRow(task, idx);
-            this.insertRowAtPosition(row, idx);
-            this.taskRows.set(idx, row);
-          } else {
-            this.updateRowContent(row, task, idx);
-          }
-        },
+    updateRow(idx) {
+      const task = projectData.project.tasks[idx];
+      if (!isTaskVisible(task.id)) {
+        this.removeRow(idx);
+        return;
+      }
+      let row = this.taskRows.get(idx);
+      if (!row) {
+        row = this.createTaskRow(task, idx);
+        this.insertRowAtPosition(row, idx);
+        this.taskRows.set(idx, row);
+      } else {
+        this.updateRowContent(row, task, idx);
+      }
+    },
 
 // Insere uma linha na posição correta
         insertRowAtPosition(row, idx) {
@@ -2674,18 +2675,24 @@ function getParameterByName(name) {
 }
 
 const bkend = {
+  /*Erro de 403 no save deverá retornar o próprio UUID pois já é um refer*/
   observe: async function() {
     var hideOverlay = showProcessingOverlay();
     try {
-      await bkend.save();
-      // Fazer a requisição ao endpoint
-      const response = await fetch(`${url_base}/${_action.reference}/${projectData.project.id}`, {method: 'POST',});
-      const data = await response.json();
+      const httpCode = await bkend.save();
+      var projectId = projectData.project.id;
 
+      if (httpCode == 200) {
+        // Fazer a requisição ao endpoint
+        const response = await fetch(`${url_base}/${_action.reference}/${projectData.project.id}`, {method: 'POST',});
+        const data = await response.json();
+
+        projectId = data.uuid;
+      }
       // Copiar o UUID para a área de transferência
-      await navigator.clipboard.writeText(bkend.url(data.uuid));
+      await navigator.clipboard.writeText(bkend.url(projectId));
 
-      showSuccessTooltip(getTranslation('notification'))
+      showSuccessTooltip(getTranslation('notification'));
       hideOverlay();
     } catch (error) {
         // showNotification('Erro ao copiar o link', 'error'); // Notificação de erro
@@ -2718,7 +2725,7 @@ const bkend = {
     if (projectData.project.id == 1) {
       projectData.project.id = await bkend.new();
     }
-
+    var httpCode = 200;
     var hideOverlay = showProcessingOverlay();
     try {
       const response = await fetch(`${url_base}/${projectData.project.id}`, {
@@ -2738,14 +2745,19 @@ const bkend = {
       setTimeout(_=>{
         hideOverlay()
       }, 300)
+      httpCode = response.status;
       if (!response.ok) throw new Error('Falha ao salvar');
 
       showSuccessTooltip(getTranslation('saveSuccess'))
 
       saveToLocalStorage();
+
     } catch (error) {
-      showErrorTooltip("Error.");
+      if (httpCode != 403) {
+        showErrorTooltip("Error.");
+      }
     }
+    return httpCode;
   },
   share: async function() {
     if (projectData.project.id == 1) {
@@ -2881,6 +2893,21 @@ function showProcessingOverlay(message = translations[currentLang].processing) {
 
   // Retornar função para remover o overlay quando necessário
   return removeOverlay;
+}
+
+function editAbleDiv(e) {
+  e.contentEditable = true;
+
+  // Cria um range que seleciona todo o conteúdo
+  const range = document.createRange();
+  range.selectNodeContents(e);
+
+  // Obtém a seleção atual e aplica o range
+  const selecao = window.getSelection();
+  selecao.removeAllRanges();
+  selecao.addRange(range);
+
+  e.focus();
 }
 
 // Configuração do Tailwind
