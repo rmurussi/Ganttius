@@ -1290,7 +1290,7 @@ function showStatusSelect(idx, elm) {
         ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
         : (chd
           ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
-          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);" this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
+          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
       case 'status':
         return isEmptyName
         ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
@@ -2876,7 +2876,10 @@ function showProcessingOverlay(message = translations[currentLang].processing) {
 }
 
 function editAbleDiv(e) {
+  e.querySelector("i") && e.querySelector("i").remove();
+  e.removeAttribute("style");
   e.contentEditable = true;
+  e.classList.add("pl-4");
 
   // Cria um range que seleciona todo o conteúdo
   const range = document.createRange();
