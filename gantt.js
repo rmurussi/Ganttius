@@ -613,7 +613,7 @@ window.addEventListener('load', function () {
 });
 
 function refAction(in_ref) {
-  if (ref) {
+  if (in_ref) {
     d.i("observeBtn").classList.add("hidden");
     d.i("shareBtn").classList.add("hidden");
     d.i("saveBtn").classList.add("hidden");
