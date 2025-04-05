@@ -612,6 +612,33 @@ window.addEventListener('load', function () {
 
 });
 
+function refAction(in_ref) {
+  if (ref) {
+    d.i("observeBtn").classList.add("hidden");
+    d.i("shareBtn").classList.add("hidden");
+    d.i("saveBtn").classList.add("hidden");
+    d.i("usersBtn").classList.add("hidden");
+    d.i("observeBtnMobile").classList.add("hidden");
+    d.i("shareBtnMobile").classList.add("hidden");
+    d.i("saveBtnMobile").classList.add("hidden");
+    d.i("usersBtnMobile").classList.add("hidden");
+    d.s("header").classList.add("bg-cyan-600");
+    d.s("header").classList.remove("bg-indigo-600");
+  }
+  else {
+    d.s("header").classList.remove("bg-cyan-600");
+    d.s("header").classList.add("bg-indigo-600");
+    d.i("shareBtn").classList.remove("hidden");
+    d.i("saveBtn").classList.remove("hidden");
+    d.i("usersBtn").classList.remove("hidden");
+    d.i("observeBtnMobile").classList.remove("hidden");
+    d.i("shareBtnMobile").classList.remove("hidden");
+    d.i("saveBtnMobile").classList.remove("hidden");
+    d.i("usersBtnMobile").classList.remove("hidden");
+    d.i("observeBtn").classList.remove("hidden");
+  }
+}
+
 async function loadProjectFromServer() {
   const uuidParamProject = getParameterByName("id");
   if (!uuidParamProject) {
@@ -625,6 +652,8 @@ async function loadProjectFromServer() {
     });
     if (!response.ok) throw new Error('Falha ao carregar projeto');
     const project = await response.json();
+    refAction(project.ref == true);
+
     if (project.tasks.length == 0) {
       project.tasks.push(
         {
@@ -2691,6 +2720,7 @@ const bkend = {
         }, 300)
         if (!response.ok) throw new Error('Falha ao obter UUID');
         const data = await response.json();
+        window.location.href = bkend.url();
         return data.uuid; // Atualiza o ID do projeto com o UUID retornado
       } catch (error) {
         setTimeout(_=>{
