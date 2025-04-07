@@ -235,6 +235,10 @@ const translations = {
    "processing": "Processando...",
    "observe": "Observar",
    "notification": "Link para visualizar o projeto copiado",
+   "maxDurationError": "A duração máxima permitida é de 2 anos (730 dias). Ajustado automaticamente.",
+   "dateRangeExceedsTwoYears": "A distância entre início e fim excedeu 2 anos. Data inicial ajustada para respeitar a duração.",
+   "endDateAdjustedForDuration": "A distância entre início e fim excedeu 2 anos. Data final ajustada para respeitar a duração.",
+   "durationAdjustedToDateRange": "Duração ajustada para corresponder à diferença entre data inicial e final (< 730 dias).",
  },
  "en": {
    "resources": "Resources",
@@ -282,6 +286,10 @@ const translations = {
    "processing": "Processing...",
    "observe": "View",
    "notification": "Link to view the project copied",
+   "maxDurationError": "The maximum allowed duration is 2 years (730 days). Adjusted automatically.",
+   "dateRangeExceedsTwoYears": "The distance between start and end exceeded 2 years. Start date adjusted to respect the duration.",
+   "endDateAdjustedForDuration": "The distance between start and end exceeded 2 years. End date adjusted to respect the duration.",
+   "durationAdjustedToDateRange": "Duration adjusted to match the difference between start and end dates (< 730 days).",
  },
  "es": {
    "resources": "Recursos",
@@ -329,6 +337,10 @@ const translations = {
    "processing": "Proceso...",
    "observe": "Observar",
    "notification": "Enlace para visualizar el proyecto copiado",
+   "maxDurationError": "La duración máxima permitida es de 2 años (730 días). Ajustado automáticamente.",
+   "dateRangeExceedsTwoYears": "La distancia entre inicio y fin excedió 2 años. Fecha de inicio ajustada para respetar la duración.",
+   "endDateAdjustedForDuration": "La distancia entre inicio y fin excedió 2 años. Fecha de fin ajustada para respetar la duración.",
+   "durationAdjustedToDateRange": "Duración ajustada para coincidir con la diferencia entre las fechas de inicio y fin (< 730 días).",
  }
 };
 
@@ -1972,22 +1984,55 @@ function updatePercentComplete(idx, elm) {
 
 function updateDuration(idx, elm) {
   elm.contentEditable = false;
-  const val = parseInt(elm.textContent.trim()) || 0;
+  let val = parseInt(elm.textContent.trim()) || 0;
   const tsk = projectData.project.tasks[idx];
+  const MAX_DURATION_DAYS = 730;
+
+  // Se a duração informada for maior que 730 dias
+  if (val > MAX_DURATION_DAYS) {
+    // Verificar a diferença entre data inicial e final
+    if (tsk.start && tsk.end) {
+      const startDate = new Date(tsk.start);
+      const endDate = new Date(tsk.end);
+      const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+      
+      if (diffDays < MAX_DURATION_DAYS) {
+        // Se a diferença for menor que 730 dias, usa esse valor como duração
+        val = Math.floor(diffDays);
+        showSuccessTooltip(getTranslation("durationAdjustedToDateRange"));
+      } else {
+        // Caso contrário, limita a 730 dias
+        val = MAX_DURATION_DAYS;
+        showErrorTooltip(getTranslation("maxDurationError"));
+      }
+    } else {
+      // Se não houver datas definidas, limita a 730 dias
+      val = MAX_DURATION_DAYS;
+      showErrorTooltip(getTranslation("maxDurationError"));
+    }
+  }
+  
   tsk.duration = val;
   elm.textContent = `${val} ${translations[currentLang].duration.toLowerCase()}`;
 
-  // Recalcular a data final da tarefa atual com base na nova duração
+  // Recalcular a data final com base na nova duração
   if (tsk.start) {
     tsk.end = addBusinessDays(tsk.start, val);
+    
+    // Verificar se a distância excede 2 anos
+    const startDate = new Date(tsk.start);
+    const endDate = new Date(tsk.end);
+    const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    if (diffDays > MAX_DURATION_DAYS) {
+      tsk.end = addBusinessDays(tsk.start, val); // Redefine para data inicial + duração
+      showErrorTooltip(getTranslation("endDateAdjustedForDuration"));
+    }
   }
 
-  // Propagar mudanças para tarefas dependentes em cascata
+  // Propagar mudanças para tarefas dependentes
   recalculateDependentTasks(idx);
-
   updateParentTasks();
   projectData.project.timeline = generateTimeline(projectData.project.tasks);
-  // buildGrid();
   GridManager.renderFullGrid();
   buildGantt();
 }
@@ -2250,43 +2295,73 @@ function updateDate(idx, fld, inp) {
   const originalStart = tsk.start; // Guarda a data inicial original
   tsk[fld] = isNaN(val.getTime()) ? new Date().toISOString().split('T')[0] : inp.value;
 
+  const MAX_DURATION_DAYS = 730; // 2 anos em dias
+
   // Se for alteração de 'start'
   if (fld === 'start') {
     if (tsk.predecessors && tsk.predecessors !== '-') {
-      const pre = projectData.project.tasks.find(t => t.name === tsk.predecessors);
-      if (pre && new Date(tsk.start) < new Date(pre.end)) {
-              // Não permite data inicial anterior ao fim do antecessor
+      const predecessors = tsk.predecessors.split(/[,;]/).map(p => p.trim());
+      let latestEndDate = null;
+      predecessors.forEach(pred => {
+        const predId = parseInt(pred);
+        const pre = isNaN(predId)
+          ? projectData.project.tasks.find(t => t.name === pred)
+          : projectData.project.tasks.find(t => t.id === predId);
+        if (pre) {
+          const preEndDate = new Date(pre.end);
+          if (!latestEndDate || preEndDate > latestEndDate) {
+            latestEndDate = preEndDate;
+          }
+        }
+      });
+      if (latestEndDate && new Date(tsk.start) <= latestEndDate) {
         tsk.start = originalStart;
-        alert(`A data inicial não pode ser anterior ao fim da tarefa antecessora "${pre.name}" (${pre.end}).`);
+        alert(`A data inicial não pode ser anterior ou igual ao fim da tarefa antecessora (${latestEndDate.toISOString().split('T')[0]}).`);
         return;
       }
     }
-      // Se a data inicial é válida, ajusta a data final com base na duração
-    tsk.end = addBusinessDays(tsk.start, tsk.duration);
+
+    // Verificar se a distância entre start e end excede 2 anos
+    const startDate = new Date(tsk.start);
+    const endDate = new Date(tsk.end);
+    const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    if (diffDays > MAX_DURATION_DAYS) {
+      // Ajustar a data inicial para end - duração
+      tsk.start = addBusinessDays(tsk.end, -tsk.duration);
+      showErrorTooltip(getTranslation("dateRangeExceedsTwoYears"));
+    } else {
+      // Ajustar a data final com base na duração
+      tsk.end = addBusinessDays(tsk.start, tsk.duration);
+    }
   }
 
   // Se for alteração de 'end'
   if (fld === 'end') {
-      // Validação de data inicial menor que final
-    const std = new Date(tsk.start);
-    const end = new Date(tsk.end);
-    if (std >= end) {
+    const startDate = new Date(tsk.start);
+    const endDate = new Date(tsk.end);
+    const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+
+    // Validação de data inicial menor que final
+    if (startDate >= endDate) {
       alert(translations[currentLang].errorDate.replace("${task.start}", tsk.start).replace("${task.end}", tsk.end).replace("${task.name}", tsk.name));
-          tsk.end = addBusinessDays(tsk.start, 1); // Garante pelo menos 1 dia útil
-        }
-
-      // Recalcular tarefas dependentes em cascata
-        recalculateDependentTasks(idx);
-      }
-
-      updateParentTasks();
-      projectData.project.timeline = generateTimeline(projectData.project.tasks);
-  // buildGrid();
-      GridManager.renderFullGrid();
-      buildGantt();
+      tsk.end = addBusinessDays(tsk.start, 1); // Garante pelo menos 1 dia útil
+    } else if (diffDays > MAX_DURATION_DAYS) {
+      // Se excede 2 anos, ajusta a data final para start + duração
+      tsk.end = addBusinessDays(tsk.start, tsk.duration);
+      showErrorTooltip(getTranslation("endDateAdjustedForDuration"));
     }
 
-    function recalculateDependentTasks(idx) {
+    // Recalcular tarefas dependentes em cascata
+    recalculateDependentTasks(idx);
+  }
+
+  updateParentTasks();
+  projectData.project.timeline = generateTimeline(projectData.project.tasks);
+  GridManager.renderFullGrid();
+  buildGantt();
+}
+
+function recalculateDependentTasks(idx) {
       const tsk = projectData.project.tasks[idx];
   let nextStart = tsk.end; // Data inicial para a próxima tarefa será o fim da atual
 
