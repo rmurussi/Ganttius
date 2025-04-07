@@ -17,11 +17,11 @@ Hosted on GitHub Pages, Ganttius is perfect for small teams, freelancers, or any
 - Optional: Git for contributing to the code
 
 ### Installation
-1. Access the project on [GitHub Pages](https://ganttius.github.io/) (replace with the real link once hosted).
+1. Access the project on [GitHub Pages](https://rmurussi.github.io/Ganttius) (replace with the real link once hosted).
 2. Use it directly in your browser — no installation required!
 3. (Optional) Clone the repository to run locally:
    ```bash
-   git clone https://github.com/your-username/ganttius.git
+   git clone https://github.com/rmurussi/Ganttius.git
    cd ganttius
    ```
    Open the `index.html` file in your browser.
@@ -56,7 +56,7 @@ Check out more details in [CONTRIBUTING.md](CONTRIBUTING.md) (create this file i
 - [ ] Integration with other tools (suggestions welcome!).
 
 ## Community
-Join us! Have ideas, questions, or want to report a bug? Open an [Issue](https://github.com/your-username/ganttius/issues) or find us on [Twitter/X](https://twitter.com/your-username) (add your link).
+Join us! Have ideas, questions, or want to report a bug? Open an [Issue](https://github.com/your-username/ganttius/issues)
 
 ## License
 Ganttius is licensed under the [MIT License](LICENSE) — feel free to use, modify, and distribute it.
