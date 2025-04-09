@@ -1285,6 +1285,7 @@ function showStatusSelect(idx, elm) {
         this.taskRows.set(idx, row);
       });
       this.lastTasks = [...projectData.project.tasks];
+      updateGridHeaders();
     },
 
 // Cria uma linha DOM para uma tarefa
