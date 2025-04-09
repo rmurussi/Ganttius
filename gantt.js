@@ -563,18 +563,18 @@ window.addEventListener('load', function () {
 
   const grd = d.i('gridScroll');
   const gnt = d.i('ganttScroll');
-  grd.addEventListener('scroll', () => {
-    gnt.scrollTop = grd.scrollTop;
-    gnt.scrollLeft = grd.scrollLeft;
-  });
+  // grd.addEventListener('scroll', () => {
+  //   gnt.scrollTop = grd.scrollTop;
+  //   gnt.scrollLeft = grd.scrollLeft;
+  // });
   gnt.addEventListener('scroll', () => {
-    grd.scrollTop = gnt.scrollTop;
-    grd.scrollLeft = gnt.scrollLeft;
+    // grd.scrollTop = gnt.scrollTop;
+    // grd.scrollLeft = gnt.scrollLeft;
 
     resetCanvas();
     setTimeout(() => {
       buildGantt()
-        }, 50); // Pequeno delay para garantir que o scroll tenha sido aplicado
+    }, 50); // Pequeno delay para garantir que o scroll tenha sido aplicado
   });
 
   window.addEventListener("resize", () => {
@@ -1285,7 +1285,9 @@ function showStatusSelect(idx, elm) {
         this.taskRows.set(idx, row);
       });
       this.lastTasks = [...projectData.project.tasks];
-      updateGridHeaders();
+      setTimeout(function() {
+        updateGridHeaders();
+      }, 300);
     },
 
 // Cria uma linha DOM para uma tarefa
