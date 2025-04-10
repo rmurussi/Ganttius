@@ -1348,7 +1348,7 @@ function showStatusSelect(idx, elm) {
     getColumnHtml(col, task, idx, isEmptyName, chd) {
       if (col.startsWith('custom_')) {
         return `
-          <td class="p-1 text-xs truncate max-w-[100px]" title="${task[col] || ''}" contenteditable="false" onblur="updateTask(${idx}, '${col}', this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);">${task[col] || ''}</td>
+          <td class="p-1 text-xs truncate max-w-[220px]" title="${task[col] || ''}" contenteditable="false" onblur="updateTask(${idx}, '${col}', this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);">${task[col] || ''}</td>
         `;
       }
       switch (col) {
@@ -1362,14 +1362,14 @@ function showStatusSelect(idx, elm) {
             </td>`;
         case 'percentComplete':
           return isEmptyName
-          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
+          ? `<td class="p-1 text-center text-xs truncate w-[90px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
           : (chd
-            ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
-            : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
+            ? `<td class="p-1 text-center text-xs truncate w-[90px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
+            : `<td class="p-1 text-center text-xs truncate w-[90px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
         case 'status':
           return isEmptyName
-          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
-          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${translations[currentLang][task.status] || task.status}" ondblclick="showStatusSelect(${idx}, this)">
+          ? `<td class="p-1 text-center text-xs truncate w-[122px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
+          : `<td class="p-1 text-center text-xs truncate w-[122px]" title="${translations[currentLang][task.status] || task.status}" ondblclick="showStatusSelect(${idx}, this)">
                     <span class="inline-block px-2 py-1 text-xs text-gray-800 ${getStatusColor(task.status)} rounded-full" onmouseenter="showColorMenu(${idx}, this)" onmouseleave="hideColorMenu()">
                         ${translations[currentLang][task.status] || task.status}
                     </span>
@@ -1387,10 +1387,10 @@ function showStatusSelect(idx, elm) {
             : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent='${task.duration}'">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`);
         case 'start':
           return isEmptyName
-          ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'start', this)"></td>`
+          ? `<td class="p-1 text-xs truncate w-[100px]" ondblclick="showDatePicker(${idx}, 'start', this)"></td>`
           : (chd
-            ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}">${task.start}</td>`
-            : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}" ondblclick="showDatePicker(${idx}, 'start', this)">${task.start}</td>`);
+            ? `<td class="p-1 text-xs truncate w-[100px]" title="${task.start}">${task.start}</td>`
+            : `<td class="p-1 text-xs truncate w-[100px]" title="${task.start}" ondblclick="showDatePicker(${idx}, 'start', this)">${task.start}</td>`);
         case 'end':
           return isEmptyName
           ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'end', this)"></td>`
