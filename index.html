@@ -113,6 +113,11 @@
             <!-- Gráfico de Gantt à direita -->
             <div class="my-6 w-1/2 mt-3 pb-6 px-2 bg-white shadow-md border-l border-gray-50" id="graphGantt">
                 <div class="overflow-x-auto relative" id="ganttScroll">
+                    <!-- Botões flutuantes -->
+                    <div id="ganttControls" class="absolute top-2 left-2 flex space-x-2 z-20">
+                      <button id="zoomOutBtn" class="p-2 bg-indigo-600 text-white rounded shadow-md hover:bg-indigo-700" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                      <button id="zoomInBtn" class="p-2 bg-indigo-600 text-white rounded shadow-md hover:bg-indigo-700" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                    </div>
                     <svg id="svgCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10;">
                         <defs>
                             <marker id="arrow" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="6" markerHeight="6" orient="auto">
