@@ -1,5 +1,8 @@
 const url_base = "https://squid-app-33v59.ondigitalocean.app";
 
+// Variável para controlar o nível de zoom
+let zoomLevel = 'weeks'; // 'weeks' (padrão) ou 'months'
+
 let projectData = {
  "project": {
    "id": "1",
@@ -239,6 +242,8 @@ const translations = {
    "dateRangeExceedsTwoYears": "A distância entre início e fim excedeu 2 anos. Data inicial ajustada para respeitar a duração.",
    "endDateAdjustedForDuration": "A distância entre início e fim excedeu 2 anos. Data final ajustada para respeitar a duração.",
    "durationAdjustedToDateRange": "Duração ajustada para corresponder à diferença entre data inicial e final (< 730 dias).",
+   "new": "Novo",
+   "newColumn": "Nova Coluna",
  },
  "en": {
    "resources": "Resources",
@@ -290,6 +295,8 @@ const translations = {
    "dateRangeExceedsTwoYears": "The distance between start and end exceeded 2 years. Start date adjusted to respect the duration.",
    "endDateAdjustedForDuration": "The distance between start and end exceeded 2 years. End date adjusted to respect the duration.",
    "durationAdjustedToDateRange": "Duration adjusted to match the difference between start and end dates (< 730 days).",
+   "new": "New",
+   "newColumn": "New Column",
  },
  "es": {
    "resources": "Recursos",
@@ -341,6 +348,8 @@ const translations = {
    "dateRangeExceedsTwoYears": "La distancia entre inicio y fin excedió 2 años. Fecha de inicio ajustada para respetar la duración.",
    "endDateAdjustedForDuration": "La distancia entre inicio y fin excedió 2 años. Fecha de fin ajustada para respetar la duración.",
    "durationAdjustedToDateRange": "Duración ajustada para coincidir con la diferencia entre las fechas de inicio y fin (< 730 días).",
+   "new": "Nuevo",
+   "newColumn": "Nueva Columna",
  }
 };
 
@@ -367,6 +376,7 @@ let isHorizontalLayout = false;
 let colorMenuTimeout;
 let hideTimeout;
 let fontSize = 1;
+let firstLoad = false;
 
 const _action = {
   "uuid": "uuid",
@@ -622,6 +632,21 @@ window.addEventListener('load', function () {
   }
 
 
+  const ganttScroll = d.i('ganttScroll');
+  const controls = d.i('ganttControls');
+
+  ganttScroll.addEventListener('mouseenter', () => {
+    controls.classList.remove('opacity-0');
+    controls.classList.add('opacity-100');
+  });
+  ganttScroll.addEventListener('mouseleave', () => {
+    controls.classList.remove('opacity-100');
+    controls.classList.add('opacity-0');
+  });
+
+  d.i('zoomOutBtn').addEventListener('click', zoomOutGantt);
+  d.i('zoomInBtn').addEventListener('click', zoomInGantt);
+
 });
 
 function refAction(in_ref) {
@@ -824,6 +849,7 @@ function dropColumn(evt, tgt) {
 }
 
 function toggleLayout() {
+  firstLoad = false;
   isHorizontalLayout = !isHorizontalLayout;
   d.i('layoutBtn').innerHTML = `<i class="fas fa-${isHorizontalLayout ? 'bars' : 'columns'}"></i>`;
 
@@ -1320,66 +1346,71 @@ function showStatusSelect(idx, elm) {
 
 // Gera o HTML para uma coluna específica
     getColumnHtml(col, task, idx, isEmptyName, chd) {
+      if (col.startsWith('custom_')) {
+        return `
+          <td class="p-1 text-xs truncate max-w-[100px]" title="${task[col] || ''}" contenteditable="false" onblur="updateTask(${idx}, '${col}', this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);">${task[col] || ''}</td>
+        `;
+      }
       switch (col) {
-      case 'actions':
-        return `
-                <td class="p-1 text-center max-h-[33px] min-w-[80px] max-w-[80px] text-[10px]">
-                    <i class="fas fa-trash text-red-600 cursor-pointer" onclick="GridManager.deleteTask(${idx})"></i>
-          ${!isEmptyName  ? `<i class="fas fa-arrow-right text-gray-600 cursor-pointer ml-1" onclick="shiftRight(${idx})"></i>` : ''}
-          ${task.level > 0 ? `<i class="fas fa-arrow-left text-gray-600 cursor-pointer ml-1" onclick="shiftLeft(${idx})"></i>` : ''}
-          ${idx === projectData.project.tasks.length - 1 ? `<i class="fas fa-plus text-green-600 cursor-pointer ml-1" title="${translations[currentLang].addTask}" onclick="GridManager.addNewTaskRow()"></i>` : ''}
+        case 'actions':
+          return `
+                  <td class="p-1 text-center max-h-[33px] min-w-[80px] max-w-[80px] text-[10px]">
+                      <i class="fas fa-trash text-red-600 cursor-pointer" onclick="GridManager.deleteTask(${idx})"></i>
+            ${!isEmptyName  ? `<i class="fas fa-arrow-right text-gray-600 cursor-pointer ml-1" onclick="shiftRight(${idx})"></i>` : ''}
+            ${task.level > 0 ? `<i class="fas fa-arrow-left text-gray-600 cursor-pointer ml-1" onclick="shiftLeft(${idx})"></i>` : ''}
+            ${idx === projectData.project.tasks.length - 1 ? `<i class="fas fa-plus text-green-600 cursor-pointer ml-1" title="${translations[currentLang].addTask}" onclick="GridManager.addNewTaskRow()"></i>` : ''}
+            </td>`;
+        case 'percentComplete':
+          return isEmptyName
+          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
+          : (chd
+            ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
+            : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
+        case 'status':
+          return isEmptyName
+          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
+          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${translations[currentLang][task.status] || task.status}" ondblclick="showStatusSelect(${idx}, this)">
+                    <span class="inline-block px-2 py-1 text-xs text-gray-800 ${getStatusColor(task.status)} rounded-full" onmouseenter="showColorMenu(${idx}, this)" onmouseleave="hideColorMenu()">
+                        ${translations[currentLang][task.status] || task.status}
+                    </span>
           </td>`;
-      case 'percentComplete':
-        return isEmptyName
-        ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
-        : (chd
-          ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%">${task.percentComplete}%</td>`
-          : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${task.percentComplete}%" contenteditable="false" onblur="updatePercentComplete(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent=this.textContent.replace('%', '')">${task.percentComplete}%</td>`);
-      case 'status':
-        return isEmptyName
-        ? `<td class="p-1 text-center text-xs truncate max-w-[100px]" ondblclick="showStatusSelect(${idx}, this)"></td>`
-        : `<td class="p-1 text-center text-xs truncate max-w-[100px]" title="${translations[currentLang][task.status] || task.status}" ondblclick="showStatusSelect(${idx}, this)">
-                  <span class="inline-block px-2 py-1 text-xs text-gray-800 ${getStatusColor(task.status)} rounded-full" onmouseenter="showColorMenu(${idx}, this)" onmouseleave="hideColorMenu()">
-                      ${translations[currentLang][task.status] || task.status}
-                  </span>
-        </td>`;
-      case 'name':
-        return `
-              <td class="p-1 text-xs truncate max-w-[200px] ${chd ? 'underline' : ''}" title="${task.name}" contenteditable="false" onblur="updateTask(${idx}, 'name', this)" ondblclick="editAbleDiv(this);" style="padding-left: ${task.level * 15}px">
-          ${chd ? `<i class="fas fa-${task.expanded ? 'minus' : 'plus'} text-gray-600 cursor-pointer mr-1" onclick="toggleExpand(${idx})"></i>` : ''}${task.name}
+        case 'name':
+          return `
+                <td class="p-1 text-xs truncate max-w-[200px] ${chd ? 'underline' : ''}" title="${task.name}" contenteditable="false" onblur="updateTask(${idx}, 'name', this)" ondblclick="editAbleDiv(this);" style="padding-left: ${task.level * 15}px">
+            ${chd ? `<i class="fas fa-${task.expanded ? 'minus' : 'plus'} text-gray-600 cursor-pointer mr-1" onclick="toggleExpand(${idx})"></i>` : ''}${task.name}
+            </td>`;
+        case 'duration':
+          return isEmptyName
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
+          : (chd
+            ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`
+            : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent='${task.duration}'">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`);
+        case 'start':
+          return isEmptyName
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'start', this)"></td>`
+          : (chd
+            ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}">${task.start}</td>`
+            : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}" ondblclick="showDatePicker(${idx}, 'start', this)">${task.start}</td>`);
+        case 'end':
+          return isEmptyName
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'end', this)"></td>`
+          : (chd
+            ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}">${task.end}</td>`
+            : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}" ondblclick="showDatePicker(${idx}, 'end', this)">${task.end}</td>`);
+        case 'resource':
+          return isEmptyName
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showResourceSelect(${idx}, this)"></td>`
+          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.resource || '-'}" ondblclick="showResourceSelect(${idx}, this)">
+          ${task.resource && task.resource !== '-' ? `<i class="${getResourceIcon(task.resource)} mr-1"></i>${task.resource}` : '-'}
           </td>`;
-      case 'duration':
-        return isEmptyName
-        ? `<td class="p-1 text-xs truncate max-w-[100px]" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this);"></td>`
-        : (chd
-          ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`
-          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.duration} ${translations[currentLang].duration.toLowerCase()}" contenteditable="false" onblur="updateDuration(${idx}, this)" onkeydown="if(event.key === 'Enter') this.blur()" ondblclick="editAbleDiv(this); this.textContent='${task.duration}'">${task.duration} ${translations[currentLang].duration.toLowerCase()}</td>`);
-      case 'start':
-        return isEmptyName
-        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'start', this)"></td>`
-        : (chd
-          ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}">${task.start}</td>`
-          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.start}" ondblclick="showDatePicker(${idx}, 'start', this)">${task.start}</td>`);
-      case 'end':
-        return isEmptyName
-        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showDatePicker(${idx}, 'end', this)"></td>`
-        : (chd
-          ? `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}">${task.end}</td>`
-          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.end}" ondblclick="showDatePicker(${idx}, 'end', this)">${task.end}</td>`);
-      case 'resource':
-        return isEmptyName
-        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showResourceSelect(${idx}, this)"></td>`
-        : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.resource || '-'}" ondblclick="showResourceSelect(${idx}, this)">
-        ${task.resource && task.resource !== '-' ? `<i class="${getResourceIcon(task.resource)} mr-1"></i>${task.resource}` : '-'}
-        </td>`;
-      case 'predecessors':
-        return isEmptyName
-        ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showPredecessorInput(${idx}, this)"></td>`
-        : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.predecessors || '-'}" ondblclick="showPredecessorInput(${idx}, this)" onmouseenter="highlightPredecessorRows(${idx})" onmouseleave="unhighlightPredecessorRows(${idx})">
-                ${task.predecessors && task.predecessors !== '-' ? task.predecessors : '-'}
-        </td>`;
-      default:
-        return `<td class="p-1 text-xs truncate max-w-[100px]">${task[col] || '-'}</td>`;
+        case 'predecessors':
+          return isEmptyName
+          ? `<td class="p-1 text-xs truncate max-w-[100px]" ondblclick="showPredecessorInput(${idx}, this)"></td>`
+          : `<td class="p-1 text-xs truncate max-w-[100px]" title="${task.predecessors || '-'}" ondblclick="showPredecessorInput(${idx}, this)" onmouseenter="highlightPredecessorRows(${idx})" onmouseleave="unhighlightPredecessorRows(${idx})">
+                  ${task.predecessors && task.predecessors !== '-' ? task.predecessors : '-'}
+          </td>`;
+        default:
+          return `<td class="p-1 text-xs truncate max-w-[100px]">${task[col] || '-'}</td>`;
       }
     },
 
@@ -1559,14 +1590,119 @@ function showStatusSelect(idx, elm) {
     const svg = d.i('svgCanvas');
     svg.querySelectorAll('line').forEach(ln => ln.remove());
   }
+// Função para gerar timeline mensal
+function generateMonthlyTimeline(tasks) {
+  let std, end;
+  if (tasks.length === 0) {
+    const now = new Date();
+    std = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now);
+  } else {
+    const dts = tasks.flatMap(t => [new Date(t.start), new Date(t.end)]);
+    std = new Date(Math.min(...dts));
+    end = new Date(Math.max(...dts));
+  }
 
-  function buildGantt() {
-    const gnt = d.s('.gantt-tasks');
-    const wks = d.s('.gantt-weeks');
-    const dys = d.s('.gantt-days');
-    const map = new Map();
+  // Ajusta para o início do mês
+  std.setDate(1);
+  // Ajusta para o final do mês
+  end.setMonth(end.getMonth() + 1, 0);
 
-    wks.innerHTML = '';
+  // Define o número mínimo de meses com base no layout
+  const minMonths = isHorizontalLayout ? 24 : 12;
+  const durationMonths = Math.ceil((end - std) / (1000 * 60 * 60 * 24 * 30.44)); // Aproximação de meses
+  if (durationMonths < minMonths) {
+    const monthsToAdd = minMonths - durationMonths;
+    const before = Math.floor(monthsToAdd / 2);
+    const after = monthsToAdd - before;
+    std.setMonth(std.getMonth() - before);
+    end.setMonth(end.getMonth() + after);
+    end.setMonth(end.getMonth() + 1, 0); // Ajusta para o final do mês
+  }
+
+  const months = [];
+  let cur = new Date(std);
+  while (cur <= end) {
+    const mth = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    months.push({
+      label: `${mth[cur.getMonth()]}/${cur.getFullYear()}`,
+      start: new Date(cur).toISOString().split('T')[0],
+      end: new Date(cur.getFullYear(), cur.getMonth() + 1, 0).toISOString().split('T')[0]
+    });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  return {
+    start: std.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0],
+    months: months
+  };
+}
+
+// Ajuste na função generateTimeline para semanas
+function generateTimeline(tasks) {
+  if (zoomLevel === 'months') return generateMonthlyTimeline(tasks);
+
+  let std, end;
+  if (tasks.length === 0) {
+    const now = new Date();
+    std = new Date(now);
+    end = new Date(now);
+  } else {
+    const dts = tasks.flatMap(t => [new Date(t.start), new Date(t.end)]);
+    std = new Date(Math.min(...dts));
+    end = new Date(Math.max(...dts));
+  }
+
+  const dur = (end - std) / (1000 * 60 * 60 * 24);
+  const wks = Math.ceil(dur / 7);
+  const minWeeks = isHorizontalLayout ? 24 * 4.33 : 12 * 4.33; // Aproximadamente 4.33 semanas por mês
+
+  if (wks < minWeeks) {
+    const add = Math.ceil(minWeeks - wks);
+    const bef = Math.floor(add / 2);
+    const aft = add - bef;
+    std.setDate(std.getDate() - bef * 7);
+    end.setDate(end.getDate() + aft * 7);
+  }
+
+  std.setDate(std.getDate() - (std.getDay() || 7) + 1); // Ajusta para início da semana (segunda-feira)
+  end.setDate(end.getDate() + (7 - (end.getDay() || 7))); // Ajusta para fim da semana (domingo)
+
+  const arr = [];
+  let cur = new Date(std);
+  while (cur <= end) {
+    const wst = new Date(cur);
+    const wed = new Date(cur);
+    wed.setDate(wed.getDate() + 6);
+    const mth = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const lbl = `${mth[wst.getMonth()]} ${wst.getDate()}~${wed.getDate()}`;
+    arr.push({
+      label: lbl,
+      start: wst.toISOString().split('T')[0],
+      end: wed.toISOString().split('T')[0]
+    });
+    cur.setDate(cur.getDate() + 7);
+  }
+
+  return {
+    start: std.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0],
+    weeks: arr,
+    daysOfWeek: ["S", "T", "Q", "Q", "S", "S", "D"]
+  };
+}
+
+// Ajuste em buildGantt para suportar zoom
+function buildGantt() {
+  const gnt = d.s('.gantt-tasks');
+  const wks = d.s('.gantt-weeks');
+  const dys = d.s('.gantt-days');
+  const map = new Map();
+  const ganttScroll = d.i('ganttScroll'); // Elemento com overflow-x
+
+  wks.innerHTML = '';
+  if (zoomLevel === 'weeks') {
     projectData.project.timeline.weeks.forEach(wk => {
       const div = d.c('div');
       div.className = 'flex-1 text-center pb-2 text-xs text-gray-800 whitespace-nowrap';
@@ -1588,33 +1724,44 @@ function showStatusSelect(idx, elm) {
       });
       dys.ac(wkd);
     });
+  } else {
+    projectData.project.timeline.months.forEach(mth => {
+      const div = d.c('div');
+      div.className = 'flex-1 text-center pb-2 text-xs text-gray-800 whitespace-nowrap';
+      div.style["padding-top"] = "24px";
+      div.textContent = mth.label;
+      wks.ac(div);
+    });
+    dys.innerHTML = ''; // Sem dias no modo mensal
+  }
 
-    gnt.innerHTML = '';
-    projectData.project.tasks.forEach((tsk, idx) => {
-      const hid = !isTaskVisible(tsk.id);
-      if (hid) return;
+  gnt.innerHTML = '';
+  projectData.project.tasks.forEach((tsk, idx) => {
+    const hid = !isTaskVisible(tsk.id);
+    if (hid) return;
 
-      const { left, width } = calculateBarPosition(tsk.start, tsk.end, projectData.project.timeline.start, projectData.project.timeline.end);
-      let prg = (width * (tsk.percentComplete / 100)).toFixed(2);
-    // Garantir tamanho mínimo de 10px para a barra de progresso (convertido para percentual)
-    const minWidthPercent = (10 / gnt.scrollWidth) * 100; // 10px em relação à largura total do Gantt
-    prg = Math.max(parseFloat(prg), minWidthPercent); // Aplica o tamanho mínimo
+    const timelineStart = zoomLevel === 'weeks' ? projectData.project.timeline.start : projectData.project.timeline.start;
+    const timelineEnd = zoomLevel === 'weeks' ? projectData.project.timeline.end : projectData.project.timeline.end;
+    const { left, width } = calculateBarPosition(tsk.start, tsk.end, timelineStart, timelineEnd);
+    let prg = (width * (tsk.percentComplete / 100)).toFixed(2);
+    const minWidthPercent = (10 / gnt.scrollWidth) * 100;
+    prg = Math.max(parseFloat(prg), minWidthPercent);
     const mid = parseInt(left) + (parseFloat(prg) / 2);
 
     const div = d.c('div');
     div.className = 'flex items-center h-[33px] group border-b border-gray-200 opacity-70';
     div.dataset.taskId = idx;
     div.innerHTML = `
-        <div class="relative h-4 w-full rounded-full">
-            <div class="absolute h-4 w-full border border-gray-300 rounded-full" 
-                style="left: ${left}%; width: ${width}%;"></div>
-            <div class="absolute h-4 ${getStatusColor(tsk.status)} rounded-full" 
-                style="left: ${left}%; width: ${prg}%;"></div>
-            <div class="absolute text-xs text-teal-800 hidden group-hover:block" 
-                style="left: ${mid}%; top: -1rem; transform: translateX(-50%);">
-                ${tsk.percentComplete}%
-            </div>
+      <div class="relative h-4 w-full rounded-full">
+        <div class="absolute h-4 w-full border border-gray-300 rounded-full" 
+          style="left: ${left}%; width: ${width}%;"></div>
+        <div class="absolute h-4 ${getStatusColor(tsk.status)} rounded-full" 
+          style="left: ${left}%; width: ${prg}%;"></div>
+        <div class="absolute text-xs text-teal-800 hidden group-hover:block" 
+          style="left: ${mid}%; top: -1rem; transform: translateX(-50%);">
+          ${tsk.percentComplete}%
         </div>
+      </div>
     `;
     gnt.ac(div);
     map.set(idx, div);
@@ -1629,16 +1776,67 @@ function showStatusSelect(idx, elm) {
     });
   });
 
-    const wid = 100;
-    const tot = wid * projectData.project.timeline.weeks.length;
-    wks.style.width = `${tot}px`;
-    dys.style.width = `${tot}px`;
-    gnt.style.width = `${tot}px`;
+  const wid = 100; // Largura fixa de cada semana/mês em pixels
+  const tot = wid * (zoomLevel === 'weeks' ? projectData.project.timeline.weeks.length : projectData.project.timeline.months.length);
+  wks.style.width = `${tot}px`;
+  dys.style.width = `${tot}px`;
+  gnt.style.width = `${tot}px`;
 
-    setTimeout((m) => {
-      buildArrows(m);
-    }, 500, map);
+  if (!firstLoad) {
+    firstLoad = true;
+    // Ajuste do scroll para a semana atual
+    setTimeout(() => {
+      setLeftGantt()
+    }, 100); // Pequeno delay para garantir que o DOM esteja pronto
   }
+
+  setTimeout((m) => {
+    buildArrows(m);
+  }, 500, map);
+}
+
+function setLeftGantt() {
+  if (zoomLevel === 'weeks') {
+    const now = new Date();
+    let currentWeekIndex = -1;
+
+    // Encontra a semana atual no timeline
+    projectData.project.timeline.weeks.forEach((wk, idx) => {
+      const weekStart = new Date(wk.start);
+      const weekEnd = new Date(wk.end);
+      if (now >= weekStart && now <= weekEnd) {
+        currentWeekIndex = idx;
+      }
+    });
+
+    if (currentWeekIndex !== -1) {
+      // Calcula a posição do scroll para centralizar a semana atual
+      const weekWidth = 100; // Largura de cada semana
+      const scrollPosition = currentWeekIndex * weekWidth - (ganttScroll.clientWidth / 2) + (weekWidth / 2);
+      ganttScroll.scrollLeft = Math.max(0, scrollPosition); // Evita scroll negativo
+    } else {
+      // Se a semana atual não estiver no timeline, vai para o início
+      ganttScroll.scrollLeft = 0;
+    }
+  } else {
+    // Para o modo mensal, vai para o início por padrão
+    ganttScroll.scrollLeft = 0;
+  }
+}
+
+// Funções de zoom
+function zoomOutGantt() {
+  zoomLevel = 'months';
+  projectData.project.timeline = generateTimeline(projectData.project.tasks);
+  buildGantt();
+}
+
+function zoomInGantt() {
+  firstLoad = false;
+  zoomLevel = 'weeks';
+  projectData.project.timeline = generateTimeline(projectData.project.tasks);
+  buildGantt();
+}
 
   function buildArrows(map) {
     const gnt = document.querySelector('.gantt-tasks');
@@ -2667,9 +2865,17 @@ function showColumnConfigMenu() {
   const mnu = d.c('div');
   mnu.id = 'columnConfigMenu';
   mnu.className = 'absolute z-10 bg-white text-gray-800 rounded shadow-lg mt-2 ml-2 text-left';
-  mnu.innerHTML = projectData.project.columnOrder.map(col => `
+
+  // Adiciona a opção "Novo" no topo
+  mnu.innerHTML = `
+    <button class="block px-4 py-2 hover:bg-gray-100 w-full text-left" onclick="addNewColumn()">${getTranslation('new')}</button>
+  `;
+
+  // Adiciona as opções de visibilidade das colunas existentes
+  mnu.innerHTML += projectData.project.columnOrder.map(col => `
     <label class="block px-4 py-2"><input type="checkbox" ${projectData.project.columnVisibility[col] ? 'checked' : ''} onchange="toggleColumn('${col}', this.checked)"> ${projectData.project.columnNames[col]}</label>
   `).join('');
+
   d.s('#gridTask table thead th:first-child').ac(mnu);
 
   d.e('click', function clk(e) {
@@ -2678,6 +2884,24 @@ function showColumnConfigMenu() {
       d.r('click', clk);
     }
   });
+}
+
+function addNewColumn() {
+  const newColId = `custom_${Date.now()}`; // ID único para a nova coluna
+  const newColName = getTranslation('newColumn'); // "Nova Coluna" com tradução
+
+  // Adiciona a nova coluna ao projectData
+  projectData.project.columnOrder.splice(1, 0, newColId); // Insere após a primeira coluna (ID)
+  projectData.project.columnVisibility[newColId] = true;
+  projectData.project.columnNames[newColId] = newColName;
+
+  // Adiciona o campo às tarefas existentes (valor inicial vazio)
+  projectData.project.tasks.forEach(task => {
+    task[newColId] = '';
+  });
+
+  updateGridHeaders();
+  GridManager.renderFullGrid();
 }
 
 function toggleColumn(col, vis) {
