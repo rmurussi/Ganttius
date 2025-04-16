@@ -643,6 +643,14 @@ window.addEventListener('load', function () {
     controls.classList.remove('opacity-100');
     controls.classList.add('opacity-0');
   });
+  controls.addEventListener('mouseenter', () => {
+    controls.classList.remove('opacity-0');
+    controls.classList.add('opacity-100');
+  });
+  controls.addEventListener('mouseleave', () => {
+    controls.classList.remove('opacity-100');
+    controls.classList.add('opacity-0');
+  });
 
   d.i('zoomOutBtn').addEventListener('click', zoomOutGantt);
   d.i('zoomInBtn').addEventListener('click', zoomInGantt);
@@ -859,11 +867,11 @@ function toggleLayout() {
   if (isHorizontalLayout) {
     d.s('.flex.h-full').className = 'flex flex-col h-full';
     grd.className = 'w-full p-6 mt-3 bg-white shadow-md rounded-l-lg';
-    gnt.className = 'w-full mt-3 px-6 pb-6 bg-white shadow-md border-l border-gray-50';
+    gnt.className = 'relative w-full mt-3 px-6 pb-6 bg-white shadow-md border-l border-gray-50';
   } else {
     d.s('.flex.flex-col.h-full').className = 'flex h-full';
     grd.className = 'w-1/2 p-6 mt-3 bg-white shadow-md rounded-l-lg';
-    gnt.className = 'w-1/2 mt-3 px-6 pb-6 bg-white shadow-md border-l border-gray-50';
+    gnt.className = 'relative w-1/2 mt-3 px-6 pb-6 bg-white shadow-md border-l border-gray-50';
   }
 
   projectData.project.timeline = generateTimeline(projectData.project.tasks);
