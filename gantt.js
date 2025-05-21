@@ -149,21 +149,7 @@ let projectData = {
      "resource": "Recurso",
      "predecessors": "Antecessores"
    },
-   "statusColors": {
-     "notStarted": "bg-gray-300",
-     "inProgress": "bg-teal-300",
-     "completed": "bg-blue-400",
-     "inPlanning": "bg-gray-300",
-     "inTesting": "bg-blue-200",
-     "delayed": "bg-purple-400",
-     "onHold": "bg-yellow-200",
-     "closed": "bg-green-400",
-     "budgeting": "bg-green-200",
-     "inReview": "bg-blue-200",
-     "canceled": "bg-red-300",
-     "postponed": "bg-purple-200",
-     "w8": "bg-purple-300"
-   }
+   "statusColors": status_colors
  }
 };
 
@@ -458,11 +444,7 @@ window.addEventListener('load', function () {
             };
           }
           if (!projectData.project.statusColors) {
-            projectData.project.statusColors = {
-              "notStarted": "bg-gray-300",
-              "inProgress": "bg-teal-300",
-              "completed": "bg-blue-400"
-            };
+            projectData.project.statusColors = status_colors;
           }
 
           projectData.project.tasks.forEach(tsk => {
@@ -998,11 +980,7 @@ async function newProject() {
           "resource": translations[currentLang].resource,
           "predecessors": translations[currentLang].predecessors
         },
-        "statusColors": {
-          "notStarted": "bg-gray-300",
-          "inProgress": "bg-teal-300",
-          "completed": "bg-blue-400"
-        },
+        "statusColors": status_colors,
         "filters": {
           status: new Set(),
           resource: new Set(),
