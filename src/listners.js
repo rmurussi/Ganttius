@@ -73,7 +73,7 @@ window.addEventListener('load', function () {
             };
           }
           if (!projectData.project.statusColors) {
-            projectData.project.statusColors = statusColors;
+            projectData.project.statusColors = status_colors;
           }
 
           projectData.project.tasks.forEach(tsk => {

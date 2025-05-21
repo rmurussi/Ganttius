@@ -147,7 +147,7 @@ let projectData = {
      "resource": "Recurso",
      "predecessors": "Antecessores"
    },
-   "statusColors": statusColors
+   "statusColors": status_colors
  }
 };
 
