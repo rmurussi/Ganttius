@@ -73,11 +73,7 @@ window.addEventListener('load', function () {
             };
           }
           if (!projectData.project.statusColors) {
-            projectData.project.statusColors = {
-              "notStarted": "bg-gray-300",
-              "inProgress": "bg-teal-300",
-              "completed": "bg-blue-400"
-            };
+            projectData.project.statusColors = statusColors;
           }
 
           projectData.project.tasks.forEach(tsk => {

@@ -147,21 +147,7 @@ let projectData = {
      "resource": "Recurso",
      "predecessors": "Antecessores"
    },
-   "statusColors": {
-     "notStarted": "bg-gray-300",
-     "inProgress": "bg-teal-300",
-     "completed": "bg-blue-400",
-     "inPlanning": "bg-gray-300",
-     "inTesting": "bg-blue-200",
-     "delayed": "bg-purple-400",
-     "onHold": "bg-yellow-200",
-     "closed": "bg-green-400",
-     "budgeting": "bg-green-200",
-     "inReview": "bg-blue-200",
-     "canceled": "bg-red-300",
-     "postponed": "bg-purple-200",
-     "w8": "bg-purple-300"
-   }
+   "statusColors": statusColors
  }
 };
 

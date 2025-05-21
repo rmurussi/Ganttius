@@ -106,11 +106,7 @@ async function newProject() {
           "resource": translations[currentLang].resource,
           "predecessors": translations[currentLang].predecessors
         },
-        "statusColors": {
-          "notStarted": "bg-gray-300",
-          "inProgress": "bg-teal-300",
-          "completed": "bg-blue-400"
-        },
+        "statusColors": statusColors,
         "filters": {
           status: new Set(),
           resource: new Set(),
