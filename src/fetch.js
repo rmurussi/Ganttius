@@ -40,7 +40,7 @@ const bkend = {
         }, 300)
         if (!response.ok) throw new Error('Falha ao obter UUID');
         const data = await response.json();
-        window.location.href = bkend.url();
+        // window.location.href = bkend.url(data.uuid);
         return data.uuid; // Atualiza o ID do projeto com o UUID retornado
       } catch (error) {
         setTimeout(_=>{
