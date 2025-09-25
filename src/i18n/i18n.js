@@ -1,8 +1,8 @@
 function getTranslation(key, lang = 'pt-BR') {
   lang = currentLang || lang;
-  switch(currentLang) {
+  switch(lang) {
     case 'en-US':
-      currentLang = 'en';
+      lang = 'en';
       break;
   }
   return translations[lang][key] || translations['pt-BR'][key]; // Fallback para pt-BR
