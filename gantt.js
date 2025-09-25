@@ -355,6 +355,11 @@ const d = {
 };
 
 let currentLang = navigator.language || "pt-BR";
+switch(currentLang) {
+  case 'en-US':
+    currentLang = 'en';
+    break;
+}
 let draggedTaskIdx = null; // Índice da tarefa sendo arrastada
 let draggedTaskIndex = null;
 let draggedColumn = null;
