@@ -4,6 +4,11 @@ function updateLanguage(lng) {
       currentLang = 'en';
       break;
   }
+  switch(lng) {
+    case 'en-US':
+      lng = 'en';
+      break;
+  }
   const old = currentLang;
   currentLang = lng;
   d.s('#languageBtn').textContent = lng === 'pt-BR' ? 'BR' : lng === 'en' ? 'EN' : 'ES';
